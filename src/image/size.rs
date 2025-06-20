@@ -7,6 +7,7 @@ use crate::IiifError;
 /// Example:
 /// ```
 /// use iiif::Size;
+/// use std::str::FromStr;
 /// 
 /// let size = Size::from_str("max").unwrap();
 /// assert_eq!(size, Size::Max);
