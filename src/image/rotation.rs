@@ -4,14 +4,14 @@ use crate::IiifError;
 
 /// Rotation 旋转角度定义
 /// This module defines the `Rotation` enum for IIIF image rotation.
-/// 
+///
 /// ```
 /// use iiif::Rotation;
 /// use std::str::FromStr;
-/// 
+///
 /// let rotation_90 = Rotation::from_str("90").unwrap();
 /// assert_eq!(rotation_90, Rotation::Degrees(90.0));
-/// 
+///
 /// let ratation: Rotation = "45.5".parse().unwrap();
 /// assert_eq!(ratation, Rotation::Degrees(45.5));
 /// ```
@@ -19,7 +19,7 @@ use crate::IiifError;
 pub enum Rotation {
     /// Format: `n`
     /// The degrees of clockwise rotation from 0 up to 360.
-    /// 
+    ///
     /// 旋转角度，顺时针方向，从 0 到 360 度。
     Degrees(f32), // 旋转角度
 
@@ -45,7 +45,8 @@ impl FromStr for Rotation {
             (false, s)
         };
 
-        let angle = angle_str.parse::<f32>()
+        let angle = angle_str
+            .parse::<f32>()
             .map_err(|_| IiifError::InvalidRotationFormat(s.to_string()))?;
 
         Ok(if is_mirror {
@@ -73,9 +74,15 @@ mod tests {
     fn test_rotation_from_str() {
         assert_eq!(Rotation::from_str("90").unwrap(), Rotation::Degrees(90.0));
         assert_eq!(Rotation::from_str("45.5").unwrap(), Rotation::Degrees(45.5));
-        assert_eq!(Rotation::from_str("!180").unwrap(), Rotation::MirrorDegrees(180.0));
-        assert_eq!(Rotation::from_str("!22.5").unwrap(), Rotation::MirrorDegrees(22.5));
-        
+        assert_eq!(
+            Rotation::from_str("!180").unwrap(),
+            Rotation::MirrorDegrees(180.0)
+        );
+        assert_eq!(
+            Rotation::from_str("!22.5").unwrap(),
+            Rotation::MirrorDegrees(22.5)
+        );
+
         // 错误情况
         assert!(Rotation::from_str("").is_err());
         assert!(Rotation::from_str("invalid").is_err());

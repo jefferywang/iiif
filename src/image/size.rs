@@ -3,15 +3,15 @@ use std::{fmt::Display, str::FromStr};
 use crate::IiifError;
 
 /// iiif Size的定义
-/// 
+///
 /// Example:
 /// ```
 /// use iiif::Size;
 /// use std::str::FromStr;
-/// 
+///
 /// let size = Size::from_str("max").unwrap();
 /// assert_eq!(size, Size::Max);
-/// 
+///
 /// let size: Size = "max".parse().unwrap();
 /// assert_eq!(size, Size::Max);
 /// ```
@@ -62,7 +62,7 @@ pub enum Size {
     /// Format: `pct:n`
     /// The width and height of the returned image is scaled to `n` percent of the width and height of the
     /// extracted region. The value of `n` must not be greater than 100.
-    /// 
+    ///
     /// 返回图像的宽度和高度将缩放至提取区域宽高的 `n` 百分比。 `n` 的取值不得超过 100。
     Pct { n: u32 },
     /// Format: `^pct:n`
@@ -85,7 +85,7 @@ pub enum Size {
     /// image may be significantly different than the extracted region, resulting in a distorted image.
     /// If `w` and/or `h` are greater than the corresponding pixel dimensions of the extracted region, the
     /// extracted region is upscaled.
-    /// 
+    ///
     /// 返回图像的宽度和高度精确为 `w` 和 `h` 。返回图像的宽高比可能与提取区域存在显著差异，导致图像变形。
     /// 若 `w` 和/或 `h` 大于提取区域的对应像素尺寸，则提取区域将被放大。
     CWH { w: u32, h: u32 },
@@ -93,7 +93,7 @@ pub enum Size {
     /// The extracted region is scaled so that the width and height of the returned image are not greater
     /// than `w` and `h`, while maintaining the aspect ratio. The returned image must be as large as possible
     /// but not larger than the extracted region, `w` or `h`, or server-imposed limits.
-    /// 
+    ///
     /// 提取的区域会进行缩放，使返回图像的宽度和高度不超过 `w` 和 `h` ，同时保持宽高比。返回的图像应尽可能大，但不得超过提取区域、
     /// `w` 或 `h` 的尺寸，或服务器设定的限制。
     LWH { w: u32, h: u32 },
@@ -112,7 +112,7 @@ impl FromStr for Size {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s = s.trim().to_lowercase();
-        
+
         // 处理关键词
         match s.as_str() {
             "max" => return Ok(Size::Max),
@@ -121,13 +121,13 @@ impl FromStr for Size {
         }
 
         // 分离 caret 前缀
-        let (caret, content) = s.strip_prefix('^')
+        let (caret, content) = s
+            .strip_prefix('^')
             .map(|c| (true, c))
             .unwrap_or((false, s.as_str()));
 
         // 解析具体格式
-        Self::parse_content(content, caret)
-            .ok_or_else(|| IiifError::InvalidSizeFormat(s))
+        Self::parse_content(content, caret).ok_or_else(|| IiifError::InvalidSizeFormat(s))
     }
 }
 
@@ -157,20 +157,26 @@ impl Size {
 
     fn parse_fit(coords: &str, caret: bool) -> Option<Self> {
         let (w, h) = Self::parse_two_nums(coords)?;
-        Some(if caret { 
-            Size::CLWH { w, h } 
-        } else { 
-            Size::LWH { w, h } 
+        Some(if caret {
+            Size::CLWH { w, h }
+        } else {
+            Size::LWH { w, h }
         })
     }
 
     fn parse_dims(content: &str, mut caret: bool) -> Option<Self> {
         let parts: Vec<&str> = content.split(',').collect();
-        if parts.len() != 2 { return None; }
+        if parts.len() != 2 {
+            return None;
+        }
 
-        let w = if parts[0].is_empty() { None } else { parts[0].parse().ok() };
-        let h = if parts[1].is_empty() { 
-            None 
+        let w = if parts[0].is_empty() {
+            None
+        } else {
+            parts[0].parse().ok()
+        };
+        let h = if parts[1].is_empty() {
+            None
         } else if let Some(h_str) = parts[1].strip_prefix('^') {
             caret = true;
             h_str.parse().ok()
@@ -193,7 +199,9 @@ impl Size {
         let mut parts = coords.split(',');
         let w = parts.next()?.parse().ok()?;
         let h = parts.next()?.parse().ok()?;
-        if parts.next().is_some() { return None; }
+        if parts.next().is_some() {
+            return None;
+        }
         Some((w, h))
     }
 }
@@ -233,19 +241,31 @@ mod tests {
         assert_eq!(Size::from_str(",150").unwrap(), Size::H { h: 150 });
         assert_eq!(Size::from_str("^,240").unwrap(), Size::CH { h: 240 });
         assert_eq!(Size::from_str(",^240").unwrap(), Size::CH { h: 240 });
-        
+
         // 百分比
         assert_eq!(Size::from_str("pct:50").unwrap(), Size::Pct { n: 50 });
         assert!(Size::from_str("pct:150").is_err());
         assert_eq!(Size::from_str("^pct:150").unwrap(), Size::CPct { n: 150 });
-        
+
         // 精确尺寸
-        assert_eq!(Size::from_str("225,100").unwrap(), Size::WH { w: 225, h: 100 });
-        assert_eq!(Size::from_str("^360,360").unwrap(), Size::CWH { w: 360, h: 360 });
-        
+        assert_eq!(
+            Size::from_str("225,100").unwrap(),
+            Size::WH { w: 225, h: 100 }
+        );
+        assert_eq!(
+            Size::from_str("^360,360").unwrap(),
+            Size::CWH { w: 360, h: 360 }
+        );
+
         // 最佳适配
-        assert_eq!(Size::from_str("!225,100").unwrap(), Size::LWH { w: 225, h: 100 });
-        assert_eq!(Size::from_str("^!360,360").unwrap(), Size::CLWH { w: 360, h: 360 });
+        assert_eq!(
+            Size::from_str("!225,100").unwrap(),
+            Size::LWH { w: 225, h: 100 }
+        );
+        assert_eq!(
+            Size::from_str("^!360,360").unwrap(),
+            Size::CLWH { w: 360, h: 360 }
+        );
     }
 
     #[test]
@@ -258,13 +278,23 @@ mod tests {
 
     #[test]
     fn test_roundtrip() {
-        let cases = ["max", "^max", "150,", "^360,", ",150", "pct:50", "^pct:150", 
-                    "225,100", "^360,360", "!225,100", "^!360,360"];
-        
+        let cases = [
+            "max",
+            "^max",
+            "150,",
+            "^360,",
+            ",150",
+            "pct:50",
+            "^pct:150",
+            "225,100",
+            "^360,360",
+            "!225,100",
+            "^!360,360",
+        ];
+
         for case in cases {
             let size = Size::from_str(case).unwrap();
             assert_eq!(format!("{}", size), case);
         }
     }
 }
-

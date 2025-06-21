@@ -1,7 +1,11 @@
+mod format;
+mod quality;
 mod region;
-mod size;
 mod rotation;
+mod size;
 
+pub use format::*;
+pub use quality::*;
 pub use region::*;
-pub use size::*;
 pub use rotation::*;
+pub use size::*;
