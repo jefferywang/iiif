@@ -2,7 +2,7 @@ use std::{fmt::Display, str::FromStr};
 
 use crate::IiifError;
 
-/// iiif Size的定义
+/// Size 大小尺寸的定义
 ///
 /// Example:
 /// ```
@@ -115,8 +115,8 @@ impl FromStr for Size {
 
         // 处理关键词
         match s.as_str() {
-            "max" => return Ok(Size::Max),
-            "^max" => return Ok(Size::CMax),
+            "max" => return Ok(Self::Max),
+            "^max" => return Ok(Self::CMax),
             _ => {}
         }
 
@@ -132,6 +132,7 @@ impl FromStr for Size {
 }
 
 impl Size {
+    // 解析内容
     fn parse_content(content: &str, caret: bool) -> Option<Self> {
         if let Some(pct) = content.strip_prefix("pct:") {
             Self::parse_pct(pct, caret)
@@ -144,83 +145,83 @@ impl Size {
         }
     }
 
+    // 解析百分比
     fn parse_pct(pct_str: &str, caret: bool) -> Option<Self> {
         let n = pct_str.parse().ok()?;
         if caret {
-            Some(Size::CPct { n })
+            Some(Self::CPct { n })
         } else if n <= 100 {
-            Some(Size::Pct { n })
+            Some(Self::Pct { n })
         } else {
             None
         }
     }
 
+    // 解析最佳适配
     fn parse_fit(coords: &str, caret: bool) -> Option<Self> {
         let (w, h) = Self::parse_two_nums(coords)?;
         Some(if caret {
-            Size::CLWH { w, h }
+            Self::CLWH { w, h }
         } else {
-            Size::LWH { w, h }
+            Self::LWH { w, h }
         })
     }
 
+    // 解析尺寸
     fn parse_dims(content: &str, mut caret: bool) -> Option<Self> {
-        let parts: Vec<&str> = content.split(',').collect();
-        if parts.len() != 2 {
+        let mut parts = content.split(',');
+        let w_str = parts.next()?;
+        let h_str = parts.next()?;
+        if parts.next().is_some() {
             return None;
         }
 
-        let w = if parts[0].is_empty() {
-            None
-        } else {
-            parts[0].parse().ok()
-        };
-        let h = if parts[1].is_empty() {
-            None
-        } else if let Some(h_str) = parts[1].strip_prefix('^') {
-            caret = true;
-            h_str.parse().ok()
-        } else {
-            parts[1].parse().ok()
-        };
+        let w = w_str.parse().ok();
+        let h = h_str
+            .strip_prefix('^')
+            .map(|s| {
+                caret = true;
+                s
+            })
+            .unwrap_or(h_str)
+            .parse()
+            .ok();
 
         match (w, h, caret) {
-            (Some(w), Some(h), true) => Some(Size::CWH { w, h }),
-            (Some(w), Some(h), false) => Some(Size::WH { w, h }),
-            (Some(w), None, true) => Some(Size::CW { w }),
-            (Some(w), None, false) => Some(Size::W { w }),
-            (None, Some(h), true) => Some(Size::CH { h }),
-            (None, Some(h), false) => Some(Size::H { h }),
+            (Some(w), Some(h), true) => Some(Self::CWH { w, h }),
+            (Some(w), Some(h), false) => Some(Self::WH { w, h }),
+            (Some(w), None, true) => Some(Self::CW { w }),
+            (Some(w), None, false) => Some(Self::W { w }),
+            (None, Some(h), true) => Some(Self::CH { h }),
+            (None, Some(h), false) => Some(Self::H { h }),
             _ => None,
         }
     }
 
+    // 解析两个数字
     fn parse_two_nums(coords: &str) -> Option<(u32, u32)> {
         let mut parts = coords.split(',');
         let w = parts.next()?.parse().ok()?;
         let h = parts.next()?.parse().ok()?;
-        if parts.next().is_some() {
-            return None;
-        }
-        Some((w, h))
+        parts.next().is_none().then_some((w, h))
     }
 }
 
 impl Display for Size {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Size::Max => write!(f, "max"),
-            Size::CMax => write!(f, "^max"),
-            Size::W { w } => write!(f, "{},", w),
-            Size::CW { w } => write!(f, "^{},", w),
-            Size::H { h } => write!(f, ",{}", h),
-            Size::CH { h } => write!(f, "^,{}", h),
-            Size::Pct { n } => write!(f, "pct:{}", n),
-            Size::CPct { n } => write!(f, "^pct:{}", n),
-            Size::WH { w, h } => write!(f, "{},{}", w, h),
-            Size::CWH { w, h } => write!(f, "^{},{}", w, h),
-            Size::LWH { w, h } => write!(f, "!{},{}", w, h),
-            Size::CLWH { w, h } => write!(f, "^!{},{}", w, h),
+            Self::Max => write!(f, "max"),
+            Self::CMax => write!(f, "^max"),
+            Self::W { w } => write!(f, "{},", w),
+            Self::CW { w } => write!(f, "^{},", w),
+            Self::H { h } => write!(f, ",{}", h),
+            Self::CH { h } => write!(f, "^,{}", h),
+            Self::Pct { n } => write!(f, "pct:{}", n),
+            Self::CPct { n } => write!(f, "^pct:{}", n),
+            Self::WH { w, h } => write!(f, "{},{}", w, h),
+            Self::CWH { w, h } => write!(f, "^{},{}", w, h),
+            Self::LWH { w, h } => write!(f, "!{},{}", w, h),
+            Self::CLWH { w, h } => write!(f, "^!{},{}", w, h),
         }
     }
 }

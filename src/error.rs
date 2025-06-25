@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// IiifError 定义了 IIIF 相关的错误类型
 #[derive(Debug, Error)]
 pub enum IiifError {
     /// Invalid region format, accepted formats are `full`, `square`, `x,y,w,h` or `pct:x,y,w,h`.
@@ -25,8 +26,18 @@ pub enum IiifError {
     #[error("Invalid format: {0}")]
     InvalidFormat(String),
 
-    #[error("Invalid image information document")]
-    InvalidImageInfo,
+    #[error("Invalid IIIF image URL: {0}")]
+    InvalidIiifURL(String),
+
+    /// Invalid identifier.
+    #[error("Invalid identifier: {0}")]
+    InvalidIdentifier(String),
+
+    #[error("Image open failed: {0}")]
+    ImageOpenFailed(String),
+
+    #[error("Region is invalid: {0}")]
+    RegionIsInvalid(String),
 
     #[error("Image not found")]
     ImageNotFound,

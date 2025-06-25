@@ -2,7 +2,7 @@ use crate::error;
 use std::fmt::Display;
 use std::str::FromStr;
 
-/// iiif Region的定义
+/// Region 裁剪区域的定义
 ///
 /// 使用示例：
 /// ```
@@ -121,6 +121,63 @@ impl Region {
             Err(_) => Err(error::IiifError::InvalidRegionFormat(coords.to_string())),
         }
     }
+
+    pub fn get_region(
+        &self,
+        width: u32,
+        height: u32,
+    ) -> Result<(u32, u32, u32, u32), error::IiifError> {
+        match self {
+            Region::Full => Ok((0, 0, width, height)),
+            Region::Square => {
+                // 按短边居中裁剪
+                let min = width.min(height);
+                let x = (width - min) / 2;
+                let y = (height - min) / 2;
+                Ok((x, y, min, min))
+            }
+            Region::Rect(x, y, w, h) => {
+                if *w == 0 || *h == 0 {
+                    return Err(error::IiifError::RegionIsInvalid(format!(
+                        "Width or height is 0: {}",
+                        self
+                    )));
+                }
+                if *x >= width || *y >= height {
+                    return Err(error::IiifError::RegionIsInvalid(format!(
+                        "X or Y is out of bounds: {}",
+                        self
+                    )));
+                }
+                // 检查区域是否超出边界，如果超出边界则直接到图片边缘
+                let rw = (*w).min(width - *x);
+                let rh = (*h).min(height - *y);
+                Ok((*x, *y, rw, rh))
+            }
+            Region::Pct(x, y, w, h) => {
+                if *w == 0.0 || *h == 0.0 {
+                    return Err(error::IiifError::RegionIsInvalid(format!(
+                        "Width or height is 0: {}",
+                        self
+                    )));
+                }
+                if *x >= 100.0 || *y >= 100.0 {
+                    return Err(error::IiifError::RegionIsInvalid(format!(
+                        "X or Y is out of bounds: {}",
+                        self
+                    )));
+                }
+                let rw = (*w).min(100.0 - *x);
+                let rh = (*h).min(100.0 - *y);
+                // 将百分比转换为像素值并裁剪到边界
+                let px = (width as f32 * (*x / 100.0)).round() as u32;
+                let py = (height as f32 * (*y / 100.0)).round() as u32;
+                let pw = (width as f32 * (rw / 100.0)).round() as u32;
+                let ph = (height as f32 * (rh / 100.0)).round() as u32;
+                Ok((px, py, pw, ph))
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -161,5 +218,34 @@ mod tests {
         );
         let a: Region = "pct:41.6,7.5,40,70".parse().unwrap();
         assert_eq!(a, Region::Pct(41.6, 7.5, 40.0, 70.0));
+    }
+
+    #[test]
+    fn test_region_get_region() {
+        let width = 300;
+        let height = 200;
+        let region1 = Region::Full;
+        let (x, y, w, h) = region1.get_region(width, height).unwrap();
+        assert_eq!((x, y, w, h), (0, 0, width, height));
+
+        let region2 = Region::Square;
+        let (x, y, w, h) = region2.get_region(width, height).unwrap();
+        assert_eq!((x, y, w, h), (50, 0, 200, 200));
+
+        let region3 = Region::Rect(125, 15, 120, 140);
+        let (x, y, w, h) = region3.get_region(width, height).unwrap();
+        assert_eq!((x, y, w, h), (125, 15, 120, 140));
+
+        let region4 = Region::Pct(41.6, 7.5, 40.0, 70.0);
+        let (x, y, w, h) = region4.get_region(width, height).unwrap();
+        assert_eq!((x, y, w, h), (125, 15, 120, 140));
+
+        let region5 = Region::Rect(125, 15, 200, 200);
+        let (x, y, w, h) = region5.get_region(width, height).unwrap();
+        assert_eq!((x, y, w, h), (125, 15, 175, 185));
+
+        let region6 = Region::Pct(41.6, 7.5, 66.6, 100.0);
+        let (x, y, w, h) = region6.get_region(width, height).unwrap();
+        assert_eq!((x, y, w, h), (125, 15, 175, 185));
     }
 }

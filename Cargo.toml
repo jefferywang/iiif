@@ -4,4 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-thiserror = "2.0.12"
+image = { version = "0.25", default-features = false, features = [
+    "jpeg",
+    "png",
+    "tiff",
+    "gif",
+    "webp",
+    "rayon",
+] }
+thiserror = "2.0"
+url = "2"
+urlencoding = "2.1.3"

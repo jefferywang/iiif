@@ -3,6 +3,7 @@ use std::{fmt::Display, str::FromStr};
 use crate::IiifError;
 
 /// Rotation 旋转角度定义
+///
 /// This module defines the `Rotation` enum for IIIF image rotation.
 ///
 /// ```
