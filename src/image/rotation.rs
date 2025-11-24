@@ -1,5 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
+use image::DynamicImage;
+
 use crate::IiifError;
 
 /// Rotation 旋转角度定义
@@ -29,6 +31,25 @@ pub enum Rotation {
     ///
     /// 镜像旋转，先进行镜像处理，然后再进行旋转。
     MirrorDegrees(f32), // 镜像旋转角度
+}
+
+impl Rotation {
+    pub fn process(&self, image: DynamicImage) -> Result<DynamicImage, IiifError> {
+        match self {
+            Rotation::Degrees(angle) => {
+                if *angle < 0.0 || *angle > 360.0 {
+                    return Err(IiifError::InvalidRotationFormat(self.to_string()));
+                }
+                Ok(image.rotate90())
+            }
+            Rotation::MirrorDegrees(angle) => {
+                if *angle < 0.0 || *angle > 360.0 {
+                    return Err(IiifError::InvalidRotationFormat(self.to_string()));
+                }
+                Ok(image.fliph().rotate90())
+            }
+        }
+    }
 }
 
 impl FromStr for Rotation {

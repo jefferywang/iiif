@@ -157,7 +157,8 @@ impl IiifImage {
         let image = self.region.process(image)?;
         // 处理 size 数据
         let image = self.size.process(image)?;
-        // 处理 size 数据
+        // 处理 rotation 数据
+        let image = self.rotation.process(image)?;
         image.save("./output/cropped.jpg").unwrap();
         Ok(image)
     }
@@ -214,6 +215,13 @@ mod tests {
             ("/full/^360,360/0/default.jpg", 360, 360),
             ("/full/!225,100/0/default.jpg", 150, 100),
             ("/full/^!360,360/0/default.jpg", 360, 240),
+            // rotation test
+            ("/full/max/0/default.jpg", 300, 200),
+            ("/full/max/180/default.jpg", 300, 200),
+            ("/full/max/90/default.jpg", 200, 300),
+            ("/full/max/!0/default.jpg", 300, 200),
+            ("/full/max/!180/default.jpg", 300, 200),
+            ("/full/max/22.5/default.png", 354, 300),
         ];
         for case in cases {
             let url_str = format!("https://example.org/image-service/demo.jpg{}", case.0);
