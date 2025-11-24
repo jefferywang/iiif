@@ -8,6 +8,7 @@ mod storage;
 use std::str::FromStr;
 
 pub use format::*;
+use image::DynamicImage;
 pub use quality::*;
 pub use region::*;
 pub use rotation::*;
@@ -104,7 +105,9 @@ impl IiifImage {
     /// ```
     /// use iiif::IiifImage;
     /// use std::str::FromStr;
+    /// use url::Url;
     ///
+    /// let url = Url::parse("https://example.org/image-service/abcd1234/full/max/0/default.jpg").unwrap();
     /// let image = IiifImage::try_from(url).unwrap();
     /// assert_eq!(image.get_content_type(), "image/jpeg");
     /// ```
@@ -137,20 +140,26 @@ impl IiifImage {
     /// ```
     /// use iiif::IiifImage;
     /// use std::str::FromStr;
+    /// use url::Url;
+    /// use iiif::Storage;
+    /// use iiif::LocalStorage;
     ///
+    /// let url = Url::parse("https://example.org/image-service/demo.jpg/full/max/0/default.jpg").unwrap();
     /// let image = IiifImage::try_from(url).unwrap();
-    /// let image_data = image.process().unwrap();
-    /// assert_eq!(image_data, vec![0x00, 0x00, 0x00, 0x00]);
+    /// let storage = LocalStorage::new("./fixtures");
+    /// let image_data = image.process(&storage).unwrap();
     /// ```
-    pub fn process(&self, storage: &dyn Storage) -> Result<Vec<u8>, crate::IiifError> {
+    pub fn process(&self, storage: &dyn Storage) -> Result<DynamicImage, crate::IiifError> {
         let local_path = storage.get_file_path(&self.identifier);
-        let mut image = image::open(local_path)
+        let image = image::open(local_path)
             .map_err(|e| crate::IiifError::ImageOpenFailed(e.to_string()))?;
-        let (x, y, w, h) = self.region.get_region(image.width(), image.height())?;
-        let image = image.crop(x, y, w, h);
-        println!("x: {}, y: {}, w: {}, h: {}", x, y, w, h);
+        // 处理 region 数据
+        let image = self.region.process(image)?;
+        // 处理 size 数据
+        let image = self.size.process(image)?;
+        // 处理 size 数据
         image.save("./output/cropped.jpg").unwrap();
-        Ok(vec![])
+        Ok(image)
     }
 }
 
@@ -182,13 +191,37 @@ mod tests {
     }
 
     #[test]
-    fn test_process_image() {
+    fn test_process() {
         let storage = LocalStorage::new("./fixtures");
-        let url_data = Url::parse(
-            "https://example.org/image-service/image3.jpg/125,15,200,200/max/0/default.jpg",
-        )
-        .unwrap();
-        let iiif_image = IiifImage::try_from(url_data).unwrap();
-        let _ = iiif_image.process(&storage).unwrap();
+        let cases = vec![
+            // region test
+            ("/full/max/0/default.jpg", 300, 200),
+            ("/square/max/0/default.jpg", 200, 200),
+            ("/125,15,120,140/max/0/default.jpg", 120, 140),
+            ("/pct:41.6,7.5,40,70/max/0/default.jpg", 120, 140),
+            ("/125,15,200,200/max/0/default.jpg", 175, 185),
+            ("/pct:41.6,7.5,66.6,100/max/0/default.jpg", 175, 185),
+            // size test
+            ("/full/max/0/default.jpg", 300, 200),
+            ("/full/^max/0/default.jpg", 300, 200),
+            ("/full/150,/0/default.jpg", 150, 100),
+            ("/full/^360,/0/default.jpg", 360, 240),
+            ("/full/,150/0/default.jpg", 225, 150),
+            ("/full/^,240/0/default.jpg", 360, 240),
+            ("/full/pct:50/0/default.jpg", 150, 100),
+            ("/full/^pct:120/0/default.jpg", 360, 240),
+            ("/full/225,100/0/default.jpg", 225, 100),
+            ("/full/^360,360/0/default.jpg", 360, 360),
+            ("/full/!225,100/0/default.jpg", 150, 100),
+            ("/full/^!360,360/0/default.jpg", 360, 240),
+        ];
+        for case in cases {
+            let url_str = format!("https://example.org/image-service/demo.jpg{}", case.0);
+            let url_data = Url::parse(&url_str).unwrap();
+            let image = IiifImage::try_from(url_data).unwrap();
+            let image = image.process(&storage).unwrap();
+            assert_eq!(image.width(), case.1);
+            assert_eq!(image.height(), case.2);
+        }
     }
 }

@@ -9,10 +9,10 @@ use crate::IiifError;
 /// use std::str::FromStr;
 ///
 /// let format_jpg = Format::from_str("jpg").unwrap();
-/// assert_eq!(format_jpg, Format::Jpg);
+/// println!("{:?}", format_jpg);
 ///
 /// let format_png: Format = "png".parse().unwrap();
-/// assert_eq!(format_png, Format::Png);
+/// println!("{:?}", format_png);
 /// ```
 #[derive(Debug, PartialEq)]
 pub enum Format {

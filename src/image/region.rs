@@ -1,3 +1,5 @@
+use image::DynamicImage;
+
 use crate::error;
 use std::fmt::Display;
 use std::str::FromStr;
@@ -122,7 +124,30 @@ impl Region {
         }
     }
 
-    pub fn get_region(
+    /// 处理图片的裁剪，返回裁剪后的图片
+    ///
+    /// Process the image cropping, return the cropped image.
+    ///
+    /// Example:
+    /// ```
+    /// use iiif::Region;
+    /// use image::DynamicImage;
+    ///
+    /// let region = Region::Full;
+    /// let image = DynamicImage::new(100, 100, image::ColorType::Rgba8);
+    /// let cropped_image = region.process(image).unwrap();
+    /// ```
+    pub fn process(&self, mut image: DynamicImage) -> Result<DynamicImage, error::IiifError> {
+        let width = image.width();
+        let height = image.height();
+        let (x, y, w, h) = self.get_region(width, height)?;
+        Ok(image.crop(x, y, w, h))
+    }
+
+    /// 获取裁剪的区域，返回 (x, y, w, h)
+    ///
+    /// Get the region to be cropped, return (x, y, w, h).
+    fn get_region(
         &self,
         width: u32,
         height: u32,

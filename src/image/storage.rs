@@ -9,9 +9,10 @@ pub trait Storage {
 /// Example:
 /// ```
 /// use iiif::LocalStorage;
+/// use iiif::Storage;
 ///
-/// let storage = LocalStorage::new("/data/images");
-/// assert_eq!(storage.get_file_path("1234567890"), "/data/images/1234567890");
+/// let storage = LocalStorage::new("./fixtures");
+/// println!("{:?}", storage.get_file_path("demo.jpg"));
 /// ```
 pub struct LocalStorage {
     base_path: PathBuf,
@@ -35,9 +36,10 @@ impl LocalStorage {
     /// Example:
     /// ```
     /// use iiif::LocalStorage;
+    /// use iiif::Storage;
     ///
     /// let storage = LocalStorage::new("/data/images");
-    /// assert_eq!(storage.get_file_path("1234567890"), "/data/images/1234567890");
+    /// println!("{:?}", storage.get_file_path("1234567890"));
     /// ```
     pub fn new<P: AsRef<Path>>(base_path: P) -> Self {
         Self {

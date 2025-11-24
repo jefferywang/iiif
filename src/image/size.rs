@@ -1,5 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
+use image::{DynamicImage, imageops::FilterType};
+
 use crate::IiifError;
 
 /// Size 大小尺寸的定义
@@ -132,6 +134,68 @@ impl FromStr for Size {
 }
 
 impl Size {
+    /// 处理图片缩放，返回缩放后的图片
+    pub fn process(&self, image: DynamicImage) -> Result<DynamicImage, IiifError> {
+        let filter_type = FilterType::Nearest;
+        match self {
+            // TODO: maxWidth, maxHeight, maxArea
+            Self::Max => Ok(image),
+            // TODO: maxWidth, maxHeight, maxArea
+            Self::CMax => Ok(image),
+            Self::W { w } => {
+                if *w > image.width() {
+                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                }
+                Ok(image.resize(*w, image.height(), filter_type))
+            }
+            Self::CW { w } => {
+                let height =
+                    (image.height() as f32 * *w as f32 / image.width() as f32).round() as u32;
+                Ok(image.resize(*w, height, filter_type))
+            }
+            Self::H { h } => {
+                if *h > image.height() {
+                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                }
+                Ok(image.resize(image.width(), *h, filter_type))
+            }
+            Self::CH { h } => {
+                let width =
+                    (image.width() as f32 * *h as f32 / image.height() as f32).round() as u32;
+                Ok(image.resize(width, *h, filter_type))
+            }
+            Self::Pct { n } => {
+                if *n > 100 {
+                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                }
+                Ok(image.resize(
+                    (image.width() as f32 * *n as f32 / 100.0).round() as u32,
+                    (image.height() as f32 * *n as f32 / 100.0).round() as u32,
+                    filter_type,
+                ))
+            }
+            Self::CPct { n } => Ok(image.resize(
+                (image.width() as f32 * *n as f32 / 100.0).round() as u32,
+                (image.height() as f32 * *n as f32 / 100.0).round() as u32,
+                filter_type,
+            )),
+            Self::WH { w, h } => {
+                if *w > image.width() || *h > image.height() {
+                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                }
+                Ok(image.resize_exact(*w, *h, filter_type))
+            }
+            Self::CWH { w, h } => Ok(image.resize_exact(*w, *h, filter_type)),
+            Self::LWH { w, h } => {
+                if *w > image.width() || *h > image.height() {
+                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                }
+                Ok(image.resize(*w, *h, filter_type))
+            }
+            Self::CLWH { w, h } => Ok(image.resize(*w, *h, filter_type)),
+        }
+    }
+
     // 解析内容
     fn parse_content(content: &str, caret: bool) -> Option<Self> {
         if let Some(pct) = content.strip_prefix("pct:") {
