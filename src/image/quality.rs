@@ -1,5 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
+use image::DynamicImage;
+
 use crate::IiifError;
 
 /// Quality 画质定义
@@ -60,6 +62,32 @@ impl FromStr for Quality {
             "gray" => Ok(Quality::Gray),
             "bitonal" => Ok(Quality::Bitonal),
             _ => Err(IiifError::InvalidQualityFormat(s.to_string())),
+        }
+    }
+}
+
+impl Quality {
+    pub fn process(&self, image: DynamicImage) -> Result<DynamicImage, IiifError> {
+        match self {
+            Quality::Default => Ok(image),
+            Quality::Color => Ok(image),
+            Quality::Gray => Ok(image.grayscale()),
+            Quality::Bitonal => {
+                // 先转换为灰度图
+                let gray_image = image.to_luma8();
+
+                // 二值化处理：阈值设为128，大于阈值的为白色(255)，小于等于阈值的为黑色(0)
+                let threshold = 170u8;
+                let binary_image = imageproc::map::map_pixels(&gray_image, |_x, _y, pixel| {
+                    if pixel[0] > threshold {
+                        image::Luma([255u8]) // 白色
+                    } else {
+                        image::Luma([0u8]) // 黑色
+                    }
+                });
+
+                Ok(image::DynamicImage::ImageLuma8(binary_image))
+            }
         }
     }
 }

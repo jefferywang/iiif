@@ -80,8 +80,10 @@ fn rotate(image: DynamicImage, angle: f32) -> DynamicImage {
     // 旋转角度转换为弧度
     let angle = angle * std::f32::consts::PI / 180.0;
     // 计算旋转后的图片大小
-    let new_width = (image.width() as f32 * angle.cos() + image.height() as f32 * angle.sin()).round() as u32;
-    let new_height = (image.width() as f32 * angle.sin() + image.height() as f32 * angle.cos()).round() as u32;
+    let new_width =
+        (image.width() as f32 * angle.cos() + image.height() as f32 * angle.sin()).round() as u32;
+    let new_height =
+        (image.width() as f32 * angle.sin() + image.height() as f32 * angle.cos()).round() as u32;
     let mut rotated_image = image::ImageBuffer::new(new_width, new_height);
     for x in 0..image.width() {
         for y in 0..image.height() {
@@ -91,7 +93,12 @@ fn rotate(image: DynamicImage, angle: f32) -> DynamicImage {
             rotated_image.put_pixel(new_x, new_y, pixel);
         }
     }
-    let rotated_image = imageproc::geometric_transformations::rotate_about_center(&rotated_image, angle, imageproc::geometric_transformations::Interpolation::Bicubic, image::Rgba([0, 0, 0, 0]));
+    let rotated_image = imageproc::geometric_transformations::rotate_about_center(
+        &rotated_image,
+        angle,
+        imageproc::geometric_transformations::Interpolation::Bicubic,
+        image::Rgba([0, 0, 0, 0]),
+    );
     image::DynamicImage::ImageRgba8(rotated_image)
 }
 
