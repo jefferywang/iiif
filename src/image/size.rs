@@ -129,7 +129,7 @@ impl FromStr for Size {
             .unwrap_or((false, s.as_str()));
 
         // 解析具体格式
-        Self::parse_content(content, caret).ok_or_else(|| IiifError::InvalidSizeFormat(s))
+        Self::parse_content(content, caret).ok_or(IiifError::InvalidSizeFormat(s))
     }
 }
 
@@ -243,9 +243,8 @@ impl Size {
         let w = w_str.parse().ok();
         let h = h_str
             .strip_prefix('^')
-            .map(|s| {
+            .inspect(|_| {
                 caret = true;
-                s
             })
             .unwrap_or(h_str)
             .parse()
@@ -276,16 +275,16 @@ impl Display for Size {
         match self {
             Self::Max => write!(f, "max"),
             Self::CMax => write!(f, "^max"),
-            Self::W { w } => write!(f, "{},", w),
-            Self::CW { w } => write!(f, "^{},", w),
-            Self::H { h } => write!(f, ",{}", h),
-            Self::CH { h } => write!(f, "^,{}", h),
-            Self::Pct { n } => write!(f, "pct:{}", n),
-            Self::CPct { n } => write!(f, "^pct:{}", n),
-            Self::WH { w, h } => write!(f, "{},{}", w, h),
-            Self::CWH { w, h } => write!(f, "^{},{}", w, h),
-            Self::LWH { w, h } => write!(f, "!{},{}", w, h),
-            Self::CLWH { w, h } => write!(f, "^!{},{}", w, h),
+            Self::W { w } => write!(f, "{w},"),
+            Self::CW { w } => write!(f, "^{w},"),
+            Self::H { h } => write!(f, ",{h}"),
+            Self::CH { h } => write!(f, "^,{h}"),
+            Self::Pct { n } => write!(f, "pct:{n}"),
+            Self::CPct { n } => write!(f, "^pct:{n}"),
+            Self::WH { w, h } => write!(f, "{w},{h}"),
+            Self::CWH { w, h } => write!(f, "^{w},{h}"),
+            Self::LWH { w, h } => write!(f, "!{w},{h}"),
+            Self::CLWH { w, h } => write!(f, "^!{w},{h}"),
         }
     }
 }
@@ -359,7 +358,7 @@ mod tests {
 
         for case in cases {
             let size = Size::from_str(case).unwrap();
-            assert_eq!(format!("{}", size), case);
+            assert_eq!(format!("{size}"), case);
         }
     }
 }

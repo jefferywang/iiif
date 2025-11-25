@@ -239,7 +239,7 @@ impl Format {
 
                 // 创建页面内容流
                 // q: 保存图形状态, cm: 变换矩阵, Do: 绘制XObject, Q: 恢复图形状态
-                let content = format!("q\n{} 0 0 {} 0 0 cm\n/Im1 Do\nQ", width, height);
+                let content = format!("q\n{width} 0 0 {height} 0 0 cm\n/Im1 Do\nQ");
                 let content_stream = Stream::new(dictionary! {}, content.into_bytes());
                 let content_id = doc.add_object(content_stream);
 

@@ -36,7 +36,7 @@ impl TryFrom<Url> for IiifImage {
         let url_segs = url
             .path_segments()
             .map(|segments| segments.collect::<Vec<_>>())
-            .unwrap_or_else(|| vec![]);
+            .unwrap_or_default();
         if url_segs.len() < 5 {
             return Err(crate::IiifError::InvalidIiifURL(
                 "URL does not have enough segments".to_string(),
@@ -58,9 +58,8 @@ impl TryFrom<Url> for IiifImage {
 }
 
 fn url_decode(value: &str) -> Result<String, crate::IiifError> {
-    let decoded = urlencoding::decode(value).map_err(|_| {
-        crate::IiifError::InvalidIdentifier(format!("Invalid identifier: {}", value))
-    })?;
+    let decoded = urlencoding::decode(value)
+        .map_err(|_| crate::IiifError::InvalidIdentifier(format!("Invalid identifier: {value}")))?;
     Ok(decoded.to_string())
 }
 
@@ -81,8 +80,7 @@ impl IiifImage {
         let parts: Vec<&str> = segment.split('.').collect();
         if parts.len() != 2 {
             return Err(crate::IiifError::InvalidIiifURL(format!(
-                "Invalid quality.format segment: {}",
-                segment
+                "Invalid quality.format segment: {segment}",
             )));
         }
         Ok((parts[0], parts[1]))
@@ -94,7 +92,7 @@ impl IiifImage {
         T::Err: std::fmt::Debug,
     {
         value.parse().map_err(|_| {
-            crate::IiifError::InvalidIiifURL(format!("Invalid {} format: {}", param_name, value))
+            crate::IiifError::InvalidIiifURL(format!("Invalid {param_name} format: {value}"))
         })
     }
 
@@ -221,8 +219,8 @@ mod tests {
             assert_eq!(image.height(), case.3);
 
             // get file extension from case.0
-            let file_extension = case.0.split('.').last().unwrap();
-            let path = format!("./output/result.{}", file_extension);
+            let file_extension = case.0.split('.').next_back().unwrap();
+            let path = format!("./output/result.{file_extension}");
             image.save(path).unwrap();
         }
     }
@@ -236,7 +234,7 @@ mod tests {
         let result = image.process(&storage).unwrap();
         assert_eq!(result.content_type, "application/pdf");
         // save pdf to file
-        let path = format!("./output/result.pdf");
+        let path = "./output/result.pdf".to_string();
         std::fs::write(path, result.data).unwrap();
     }
 }

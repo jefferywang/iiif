@@ -132,8 +132,8 @@ impl FromStr for Rotation {
 impl Display for Rotation {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Rotation::Degrees(angle) => write!(f, "{}", angle),
-            Rotation::MirrorDegrees(angle) => write!(f, "!{}", angle),
+            Rotation::Degrees(angle) => write!(f, "{angle}"),
+            Rotation::MirrorDegrees(angle) => write!(f, "!{angle}"),
         }
     }
 }

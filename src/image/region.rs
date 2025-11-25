@@ -21,11 +21,11 @@ use std::str::FromStr;
 /// assert_eq!(region_pct, Region::Pct(41.6, 7.5, 66.6, 100.0));
 ///
 /// let region_full = "full".parse::<Region>().unwrap();
-/// let region_squre = "square".parse::<Region>().unwrap();
+/// let region_square = "square".parse::<Region>().unwrap();
 /// let region_rect = "125,15,120,140".parse::<Region>().unwrap();
 /// let region_pct = "pct:41.6,7.5,66.6,100".parse::<Region>().unwrap();
 /// assert_eq!(region_full, Region::Full);
-/// assert_eq!(region_squre, Region::Square);
+/// assert_eq!(region_square, Region::Square);
 /// assert_eq!(region_rect, Region::Rect(125, 15, 120, 140));
 /// assert_eq!(region_pct, Region::Pct(41.6, 7.5, 66.6, 100.0));
 /// ```
@@ -85,8 +85,8 @@ impl Display for Region {
         match self {
             Region::Full => write!(f, "full"),
             Region::Square => write!(f, "square"),
-            Region::Rect(x, y, w, h) => write!(f, "{},{},{},{}", x, y, w, h),
-            Region::Pct(x, y, w, h) => write!(f, "pct:{},{},{},{}", x, y, w, h),
+            Region::Rect(x, y, w, h) => write!(f, "{x},{y},{w},{h}"),
+            Region::Pct(x, y, w, h) => write!(f, "pct:{x},{y},{w},{h}"),
         }
     }
 }
@@ -164,14 +164,12 @@ impl Region {
             Region::Rect(x, y, w, h) => {
                 if *w == 0 || *h == 0 {
                     return Err(error::IiifError::RegionIsInvalid(format!(
-                        "Width or height is 0: {}",
-                        self
+                        "Width or height is 0: {self}",
                     )));
                 }
                 if *x >= width || *y >= height {
                     return Err(error::IiifError::RegionIsInvalid(format!(
-                        "X or Y is out of bounds: {}",
-                        self
+                        "X or Y is out of bounds: {self}",
                     )));
                 }
                 // 检查区域是否超出边界，如果超出边界则直接到图片边缘
@@ -182,14 +180,12 @@ impl Region {
             Region::Pct(x, y, w, h) => {
                 if *w == 0.0 || *h == 0.0 {
                     return Err(error::IiifError::RegionIsInvalid(format!(
-                        "Width or height is 0: {}",
-                        self
+                        "Width or height is 0: {self}",
                     )));
                 }
                 if *x >= 100.0 || *y >= 100.0 {
                     return Err(error::IiifError::RegionIsInvalid(format!(
-                        "X or Y is out of bounds: {}",
-                        self
+                        "X or Y is out of bounds: {self}",
                     )));
                 }
                 let rw = (*w).min(100.0 - *x);
