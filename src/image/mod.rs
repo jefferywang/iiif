@@ -1,4 +1,5 @@
 mod format;
+mod info;
 mod quality;
 mod region;
 mod result;
@@ -9,6 +10,7 @@ mod storage;
 use std::str::FromStr;
 
 pub use format::*;
+pub use info::*;
 pub use quality::*;
 pub use region::*;
 pub use result::*;
