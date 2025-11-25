@@ -66,13 +66,13 @@ pub enum Size {
     /// extracted region. The value of `n` must not be greater than 100.
     ///
     /// 返回图像的宽度和高度将缩放至提取区域宽高的 `n` 百分比。 `n` 的取值不得超过 100。
-    Pct { n: u32 },
+    Pct { n: f32 },
     /// Format: `^pct:n`
     /// The width and height of the returned image is scaled to `n` percent of the width and height of the
     /// extracted region. For values of `n` greater than 100, the extracted region is upscaled.
     ///
     /// 返回图像的宽度和高度将缩放至提取区域宽高的 `n` 百分比。当 `n` 取值超过 100 时，提取区域将被放大。
-    CPct { n: u32 },
+    CPct { n: f32 },
     /// Format: `w,h`
     /// The width and height of the returned image are exactly `w` and `h`.
     /// The aspect ratio of the returned image may be significantly different than the extracted region,
@@ -165,18 +165,18 @@ impl Size {
                 Ok(image.resize(width, *h, filter_type))
             }
             Self::Pct { n } => {
-                if *n > 100 {
+                if *n > 100.0 {
                     return Err(IiifError::InvalidSizeFormat(self.to_string()));
                 }
                 Ok(image.resize(
-                    (image.width() as f32 * *n as f32 / 100.0).round() as u32,
-                    (image.height() as f32 * *n as f32 / 100.0).round() as u32,
+                    (image.width() as f32 * *n / 100.0).round() as u32,
+                    (image.height() as f32 * *n / 100.0).round() as u32,
                     filter_type,
                 ))
             }
             Self::CPct { n } => Ok(image.resize(
-                (image.width() as f32 * *n as f32 / 100.0).round() as u32,
-                (image.height() as f32 * *n as f32 / 100.0).round() as u32,
+                (image.width() as f32 * *n / 100.0).round() as u32,
+                (image.height() as f32 * *n / 100.0).round() as u32,
                 filter_type,
             )),
             Self::WH { w, h } => {
@@ -212,12 +212,15 @@ impl Size {
     // 解析百分比
     fn parse_pct(pct_str: &str, caret: bool) -> Option<Self> {
         let n = pct_str.parse().ok()?;
+        if n < 0.0 {
+            return None;
+        }
         if caret {
             Some(Self::CPct { n })
-        } else if n <= 100 {
+        } else if n <= 100.0 {
             Some(Self::Pct { n })
         } else {
-            None
+            return None;
         }
     }
 
@@ -307,9 +310,9 @@ mod tests {
         assert_eq!(Size::from_str(",^240").unwrap(), Size::CH { h: 240 });
 
         // 百分比
-        assert_eq!(Size::from_str("pct:50").unwrap(), Size::Pct { n: 50 });
+        assert_eq!(Size::from_str("pct:50").unwrap(), Size::Pct { n: 50.0 });
         assert!(Size::from_str("pct:150").is_err());
-        assert_eq!(Size::from_str("^pct:150").unwrap(), Size::CPct { n: 150 });
+        assert_eq!(Size::from_str("^pct:150").unwrap(), Size::CPct { n: 150.0 });
 
         // 精确尺寸
         assert_eq!(
@@ -335,7 +338,7 @@ mod tests {
     #[test]
     fn test_size_display() {
         assert_eq!(format!("{}", Size::Max), "max");
-        assert_eq!(format!("{}", Size::Pct { n: 50 }), "pct:50");
+        assert_eq!(format!("{}", Size::Pct { n: 50.0 }), "pct:50");
         assert_eq!(format!("{}", Size::WH { w: 100, h: 200 }), "100,200");
         assert_eq!(format!("{}", Size::LWH { w: 100, h: 200 }), "!100,200");
     }

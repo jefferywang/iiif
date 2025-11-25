@@ -8,6 +8,8 @@ use image::codecs::png::PngEncoder;
 use image::codecs::tiff::TiffEncoder;
 use image::codecs::webp::WebPEncoder;
 use lopdf::{Document, Object, Stream, dictionary};
+use serde::Deserialize;
+use serde::Serialize;
 use std::io::Cursor;
 
 use crate::IiifError;
@@ -24,7 +26,8 @@ use crate::IiifError;
 /// let format_png: Format = "png".parse().unwrap();
 /// println!("{:?}", format_png);
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Format {
     /// Format: `jpg`
     ///
