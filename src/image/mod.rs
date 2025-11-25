@@ -205,6 +205,8 @@ mod tests {
             ("/full/max/0/color.jpg", "image/jpeg", 300, 200),
             ("/full/max/0/gray.jpg", "image/jpeg", 300, 200),
             ("/full/max/0/bitonal.jpg", "image/jpeg", 300, 200),
+            // format test
+            ("/full/max/0/default.tif", "image/tiff", 300, 200),
         ];
         for case in cases {
             let url_str = format!("https://example.org/image-service/demo.jpg{}", case.0);
@@ -221,8 +223,20 @@ mod tests {
             // get file extension from case.0
             let file_extension = case.0.split('.').last().unwrap();
             let path = format!("./output/result.{}", file_extension);
-            println!("path: {}", path);
             image.save(path).unwrap();
         }
+    }
+
+    #[test]
+    fn test_process_pdf() {
+        let storage = LocalStorage::new("./fixtures");
+        let url_str = "https://example.org/image-service/demo.jpg/full/max/0/default.pdf";
+        let url_data = Url::parse(url_str).unwrap();
+        let image = IiifImage::try_from(url_data).unwrap();
+        let result = image.process(&storage).unwrap();
+        assert_eq!(result.content_type, "application/pdf");
+        // save pdf to file
+        let path = format!("./output/result.pdf");
+        std::fs::write(path, result.data).unwrap();
     }
 }
