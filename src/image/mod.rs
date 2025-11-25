@@ -1,6 +1,7 @@
 mod format;
 mod quality;
 mod region;
+mod result;
 mod rotation;
 mod size;
 mod storage;
@@ -8,9 +9,9 @@ mod storage;
 use std::str::FromStr;
 
 pub use format::*;
-use image::DynamicImage;
 pub use quality::*;
 pub use region::*;
+pub use result::*;
 pub use rotation::*;
 pub use size::*;
 pub use storage::*;
@@ -97,41 +98,6 @@ impl IiifImage {
         })
     }
 
-    /// 获取内容类型
-    ///
-    /// Returns the content type of the image based on the format.
-    ///
-    /// Example:
-    /// ```
-    /// use iiif::IiifImage;
-    /// use std::str::FromStr;
-    /// use url::Url;
-    ///
-    /// let url = Url::parse("https://example.org/image-service/abcd1234/full/max/0/default.jpg").unwrap();
-    /// let image = IiifImage::try_from(url).unwrap();
-    /// assert_eq!(image.get_content_type(), "image/jpeg");
-    /// ```
-    ///
-    /// Returns:
-    /// - "image/jpeg" for Format::Jpg
-    /// - "image/png" for Format::Png
-    /// - "image/gif" for Format::Gif
-    /// - "image/webp" for Format::Webp
-    /// - "image/tiff" for Format::Tif
-    /// - "image/jp2" for Format::Jp2
-    /// - "application/pdf" for Format::Pdf
-    pub fn get_content_type(&self) -> &str {
-        match self.format {
-            Format::Jpg => "image/jpeg",
-            Format::Png => "image/png",
-            Format::Gif => "image/gif",
-            Format::Webp => "image/webp",
-            Format::Tif => "image/tiff",
-            Format::Jp2 => "image/jp2",
-            Format::Pdf => "application/pdf",
-        }
-    }
-
     /// 对图片进行处理
     ///
     /// Returns the processed image data as a vector of bytes.
@@ -149,7 +115,7 @@ impl IiifImage {
     /// let storage = LocalStorage::new("./fixtures");
     /// let image_data = image.process(&storage).unwrap();
     /// ```
-    pub fn process(&self, storage: &dyn Storage) -> Result<DynamicImage, crate::IiifError> {
+    pub fn process(&self, storage: &dyn Storage) -> Result<ProcessResult, crate::IiifError> {
         let local_path = storage.get_file_path(&self.identifier);
         let image = image::open(local_path)
             .map_err(|e| crate::IiifError::ImageOpenFailed(e.to_string()))?;
@@ -160,8 +126,9 @@ impl IiifImage {
         // 处理 rotation 数据
         let image = self.rotation.process(image)?;
         let image = self.quality.process(image)?;
-        image.save("./output/cropped.jpg").unwrap();
-        Ok(image)
+        let result = self.format.process(image)?;
+        let content_type = self.format.get_content_type();
+        Ok(ProcessResult::new(content_type.to_string(), result))
     }
 }
 
@@ -197,45 +164,65 @@ mod tests {
         let storage = LocalStorage::new("./fixtures");
         let cases = vec![
             // region test
-            ("/full/max/0/default.jpg", 300, 200),
-            ("/square/max/0/default.jpg", 200, 200),
-            ("/125,15,120,140/max/0/default.jpg", 120, 140),
-            ("/pct:41.6,7.5,40,70/max/0/default.jpg", 120, 140),
-            ("/125,15,200,200/max/0/default.jpg", 175, 185),
-            ("/pct:41.6,7.5,66.6,100/max/0/default.jpg", 175, 185),
+            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
+            ("/square/max/0/default.jpg", "image/jpeg", 200, 200),
+            ("/125,15,120,140/max/0/default.jpg", "image/jpeg", 120, 140),
+            (
+                "/pct:41.6,7.5,40,70/max/0/default.jpg",
+                "image/jpeg",
+                120,
+                140,
+            ),
+            ("/125,15,200,200/max/0/default.jpg", "image/jpeg", 175, 185),
+            (
+                "/pct:41.6,7.5,66.6,100/max/0/default.jpg",
+                "image/jpeg",
+                175,
+                185,
+            ),
             // size test
-            ("/full/max/0/default.jpg", 300, 200),
-            ("/full/^max/0/default.jpg", 300, 200),
-            ("/full/150,/0/default.jpg", 150, 100),
-            ("/full/^360,/0/default.jpg", 360, 240),
-            ("/full/,150/0/default.jpg", 225, 150),
-            ("/full/^,240/0/default.jpg", 360, 240),
-            ("/full/pct:50/0/default.jpg", 150, 100),
-            ("/full/^pct:120/0/default.jpg", 360, 240),
-            ("/full/225,100/0/default.jpg", 225, 100),
-            ("/full/^360,360/0/default.jpg", 360, 360),
-            ("/full/!225,100/0/default.jpg", 150, 100),
-            ("/full/^!360,360/0/default.jpg", 360, 240),
+            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
+            ("/full/^max/0/default.jpg", "image/jpeg", 300, 200),
+            ("/full/150,/0/default.jpg", "image/jpeg", 150, 100),
+            ("/full/^360,/0/default.jpg", "image/jpeg", 360, 240),
+            ("/full/,150/0/default.jpg", "image/jpeg", 225, 150),
+            ("/full/^,240/0/default.jpg", "image/jpeg", 360, 240),
+            ("/full/pct:50/0/default.jpg", "image/jpeg", 150, 100),
+            ("/full/^pct:120/0/default.jpg", "image/jpeg", 360, 240),
+            ("/full/225,100/0/default.jpg", "image/jpeg", 225, 100),
+            ("/full/^360,360/0/default.jpg", "image/jpeg", 360, 360),
+            ("/full/!225,100/0/default.jpg", "image/jpeg", 150, 100),
+            ("/full/^!360,360/0/default.jpg", "image/jpeg", 360, 240),
             // rotation test
-            ("/full/max/0/default.jpg", 300, 200),
-            ("/full/max/180/default.jpg", 300, 200),
-            ("/full/max/90/default.jpg", 200, 300),
-            ("/full/max/!0/default.jpg", 300, 200),
-            ("/full/max/!180/default.jpg", 300, 200),
-            ("/full/max/22.5/default.png", 354, 300),
+            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
+            ("/full/max/180/default.jpg", "image/jpeg", 300, 200),
+            ("/full/max/90/default.jpg", "image/jpeg", 200, 300),
+            ("/full/max/!0/default.jpg", "image/jpeg", 300, 200),
+            ("/full/max/!180/default.jpg", "image/jpeg", 300, 200),
+            ("/full/max/22.5/default.png", "image/png", 354, 300),
             // quality test
-            ("/full/max/0/default.jpg", 300, 200),
-            ("/full/max/0/color.jpg", 300, 200),
-            ("/full/max/0/gray.jpg", 300, 200),
-            ("/full/max/0/bitonal.jpg", 300, 200),
+            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
+            ("/full/max/0/color.jpg", "image/jpeg", 300, 200),
+            ("/full/max/0/gray.jpg", "image/jpeg", 300, 200),
+            ("/full/max/0/bitonal.jpg", "image/jpeg", 300, 200),
         ];
         for case in cases {
             let url_str = format!("https://example.org/image-service/demo.jpg{}", case.0);
             let url_data = Url::parse(&url_str).unwrap();
             let image = IiifImage::try_from(url_data).unwrap();
-            let image = image.process(&storage).unwrap();
-            assert_eq!(image.width(), case.1);
-            assert_eq!(image.height(), case.2);
+            let result = image.process(&storage).unwrap();
+            assert_eq!(result.content_type, case.1);
+
+            // 将 vec<u8> 转换为 image::DynamicImage
+            let image = image::load_from_memory(&result.data).unwrap();
+            assert_eq!(image.width(), case.2);
+            assert_eq!(image.height(), case.3);
+
+            // get file extension from case.0
+            let file_extension = case.0.split('.').last().unwrap();
+            let path = format!("./output/result.{}", file_extension);
+            println!("path: {}", path);
+            image.save(path).unwrap();
         }
     }
 }

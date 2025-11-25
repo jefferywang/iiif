@@ -42,6 +42,9 @@ pub enum IiifError {
     #[error("Image not found")]
     ImageNotFound,
 
+    #[error("Image encode failed: {0}")]
+    ImageEncodeFailed(String),
+
     #[error("Internal server error")]
     InternalServerError,
 }

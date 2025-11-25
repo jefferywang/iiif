@@ -1,5 +1,14 @@
 use std::{fmt::Display, str::FromStr};
 
+use image::DynamicImage;
+use image::ImageEncoder;
+use image::codecs::gif::GifEncoder;
+use image::codecs::jpeg::JpegEncoder;
+use image::codecs::png::PngEncoder;
+use image::codecs::tiff::TiffEncoder;
+use image::codecs::webp::WebPEncoder;
+use std::io::Cursor;
+
 use crate::IiifError;
 
 /// Format 格式定义
@@ -99,6 +108,104 @@ impl Display for Format {
             Format::Pdf => write!(f, "pdf"),
             Format::Webp => write!(f, "webp"),
         }
+    }
+}
+
+impl Format {
+    pub fn get_content_type(&self) -> &str {
+        match self {
+            Self::Jpg => "image/jpeg",
+            Self::Png => "image/png",
+            Self::Gif => "image/gif",
+            Self::Webp => "image/webp",
+            Self::Tif => "image/tiff",
+            Self::Jp2 => "image/jp2",
+            Self::Pdf => "application/pdf",
+        }
+    }
+
+    pub fn process(&self, image: DynamicImage) -> Result<Vec<u8>, IiifError> {
+        let mut bytes = Vec::new();
+
+        match self {
+            Format::Jpg => {
+                let rgb = image.to_rgb8();
+                let mut cursor = Cursor::new(&mut bytes);
+                let encoder = JpegEncoder::new(&mut cursor);
+                encoder
+                    .write_image(
+                        rgb.as_raw(),
+                        rgb.width(),
+                        rgb.height(),
+                        image::ExtendedColorType::Rgb8,
+                    )
+                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+            }
+            Format::Png => {
+                let rgba = image.to_rgba8();
+                let mut cursor = Cursor::new(&mut bytes);
+                let encoder = PngEncoder::new(&mut cursor);
+                encoder
+                    .write_image(
+                        rgba.as_raw(),
+                        rgba.width(),
+                        rgba.height(),
+                        image::ExtendedColorType::Rgba8,
+                    )
+                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+            }
+            Format::Webp => {
+                let rgba = image.to_rgba8();
+                let mut cursor = Cursor::new(&mut bytes);
+                let encoder = WebPEncoder::new_lossless(&mut cursor);
+                encoder
+                    .write_image(
+                        rgba.as_raw(),
+                        rgba.width(),
+                        rgba.height(),
+                        image::ExtendedColorType::Rgba8,
+                    )
+                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+            }
+            Format::Gif => {
+                let rgba = image.to_rgba8();
+                let mut cursor = Cursor::new(&mut bytes);
+                let encoder = GifEncoder::new(&mut cursor);
+                encoder
+                    .write_image(
+                        rgba.as_raw(),
+                        rgba.width(),
+                        rgba.height(),
+                        image::ExtendedColorType::Rgba8,
+                    )
+                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+            }
+            Format::Tif => {
+                let rgba = image.to_rgba8();
+                let mut cursor = Cursor::new(&mut bytes);
+                let encoder = TiffEncoder::new(&mut cursor);
+                encoder
+                    .write_image(
+                        rgba.as_raw(),
+                        rgba.width(),
+                        rgba.height(),
+                        image::ExtendedColorType::Rgba8,
+                    )
+                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+            }
+            Format::Jp2 => {
+                return Err(IiifError::ImageEncodeFailed(
+                    "JPEG 2000 encoding not yet implemented".to_string(),
+                ));
+            }
+            Format::Pdf => {
+                return Err(IiifError::ImageEncodeFailed(
+                    "PDF encoding not yet implemented".to_string(),
+                ));
+            }
+        }
+
+        Ok(bytes)
     }
 }
 
