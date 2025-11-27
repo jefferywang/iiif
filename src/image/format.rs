@@ -307,6 +307,8 @@ impl Format {
 
 #[cfg(test)]
 mod tests {
+    use crate::{LocalStorage, Storage};
+
     use super::*;
 
     #[test]
@@ -333,5 +335,32 @@ mod tests {
         assert_eq!(format!("{}", Format::Jp2), "jp2");
         assert_eq!(format!("{}", Format::Pdf), "pdf");
         assert_eq!(format!("{}", Format::Webp), "webp");
+    }
+
+    #[test]
+    fn test_format_process() {
+        let storage = LocalStorage::new("./fixtures");
+        let cases = vec![
+            ("jpg", 300, 200),
+            ("tif", 300, 200),
+            ("png", 300, 200),
+            ("gif", 300, 200),
+            ("pdf", 300, 200),
+            ("webp", 300, 200),
+        ];
+        for case in cases {
+            let format = case.0.parse::<Format>().unwrap();
+            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let result = format.process(image).unwrap();
+            if format == Format::Pdf {
+                let header = result[..4].to_vec();
+                assert_eq!(header, b"%PDF");
+            } else {
+                // 将 vec<u8> 转换为 image::DynamicImage
+                let image = image::load_from_memory(&result).unwrap();
+                assert_eq!(image.width(), case.1);
+                assert_eq!(image.height(), case.2);
+            }
+        }
     }
 }

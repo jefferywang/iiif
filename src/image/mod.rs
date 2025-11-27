@@ -162,52 +162,7 @@ mod tests {
     #[test]
     fn test_process() {
         let storage = LocalStorage::new("./fixtures");
-        let cases = vec![
-            // region test
-            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
-            ("/square/max/0/default.jpg", "image/jpeg", 200, 200),
-            ("/125,15,120,140/max/0/default.jpg", "image/jpeg", 120, 140),
-            (
-                "/pct:41.6,7.5,40,70/max/0/default.jpg",
-                "image/jpeg",
-                120,
-                140,
-            ),
-            ("/125,15,200,200/max/0/default.jpg", "image/jpeg", 175, 185),
-            (
-                "/pct:41.6,7.5,66.6,100/max/0/default.jpg",
-                "image/jpeg",
-                175,
-                185,
-            ),
-            // size test
-            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
-            ("/full/^max/0/default.jpg", "image/jpeg", 300, 200),
-            ("/full/150,/0/default.jpg", "image/jpeg", 150, 100),
-            ("/full/^360,/0/default.jpg", "image/jpeg", 360, 240),
-            ("/full/,150/0/default.jpg", "image/jpeg", 225, 150),
-            ("/full/^,240/0/default.jpg", "image/jpeg", 360, 240),
-            ("/full/pct:50/0/default.jpg", "image/jpeg", 150, 100),
-            ("/full/^pct:120/0/default.jpg", "image/jpeg", 360, 240),
-            ("/full/225,100/0/default.jpg", "image/jpeg", 225, 100),
-            ("/full/^360,360/0/default.jpg", "image/jpeg", 360, 360),
-            ("/full/!225,100/0/default.jpg", "image/jpeg", 150, 100),
-            ("/full/^!360,360/0/default.jpg", "image/jpeg", 360, 240),
-            // rotation test
-            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
-            ("/full/max/180/default.jpg", "image/jpeg", 300, 200),
-            ("/full/max/90/default.jpg", "image/jpeg", 200, 300),
-            ("/full/max/!0/default.jpg", "image/jpeg", 300, 200),
-            ("/full/max/!180/default.jpg", "image/jpeg", 300, 200),
-            ("/full/max/22.5/default.png", "image/png", 354, 300),
-            // quality test
-            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
-            ("/full/max/0/color.jpg", "image/jpeg", 300, 200),
-            ("/full/max/0/gray.jpg", "image/jpeg", 300, 200),
-            ("/full/max/0/bitonal.jpg", "image/jpeg", 300, 200),
-            // format test
-            ("/full/max/0/default.tif", "image/tiff", 300, 200),
-        ];
+        let cases = vec![("/square/150,/15/color.png", "image/png", 184, 184)];
         for case in cases {
             let url_str = format!("https://example.org/image-service/demo.jpg{}", case.0);
             let url_data = Url::parse(&url_str).unwrap();
@@ -219,24 +174,6 @@ mod tests {
             let image = image::load_from_memory(&result.data).unwrap();
             assert_eq!(image.width(), case.2);
             assert_eq!(image.height(), case.3);
-
-            // get file extension from case.0
-            let file_extension = case.0.split('.').next_back().unwrap();
-            let path = format!("./output/result.{file_extension}");
-            image.save(path).unwrap();
         }
-    }
-
-    #[test]
-    fn test_process_pdf() {
-        let storage = LocalStorage::new("./fixtures");
-        let url_str = "https://example.org/image-service/demo.jpg/full/max/0/default.pdf";
-        let url_data = Url::parse(url_str).unwrap();
-        let image = IiifImage::try_from(url_data).unwrap();
-        let result = image.process(&storage).unwrap();
-        assert_eq!(result.content_type, "application/pdf");
-        // save pdf to file
-        let path = "./output/result.pdf".to_string();
-        std::fs::write(path, result.data).unwrap();
     }
 }

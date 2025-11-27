@@ -203,6 +203,9 @@ impl Region {
 
 #[cfg(test)]
 mod tests {
+    use crate::LocalStorage;
+    use crate::Storage;
+
     use super::*;
 
     #[test]
@@ -268,5 +271,26 @@ mod tests {
         let region6 = Region::Pct(41.6, 7.5, 66.6, 100.0);
         let (x, y, w, h) = region6.get_region(width, height).unwrap();
         assert_eq!((x, y, w, h), (125, 15, 175, 185));
+    }
+
+    #[test]
+    fn test_region_process() {
+        let storage = LocalStorage::new("./fixtures");
+        let cases = vec![
+            ("full", 300, 200),
+            ("square", 200, 200),
+            ("125,15,120,140", 120, 140),
+            ("pct:41.6,7.5,40,70", 120, 140),
+            ("125,15,200,200", 175, 185),
+            ("pct:41.6,7.5,66.6,100", 175, 185),
+        ];
+
+        for case in cases {
+            let region = case.0.parse::<Region>().unwrap();
+            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let cropped_image = region.process(image).unwrap();
+            assert_eq!(cropped_image.width(), case.1);
+            assert_eq!(cropped_image.height(), case.2);
+        }
     }
 }

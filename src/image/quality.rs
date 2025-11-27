@@ -105,6 +105,8 @@ impl Display for Quality {
 
 #[cfg(test)]
 mod tests {
+    use crate::{LocalStorage, Storage};
+
     use super::*;
 
     #[test]
@@ -126,5 +128,23 @@ mod tests {
         assert_eq!(format!("{}", Quality::Color), "color");
         assert_eq!(format!("{}", Quality::Gray), "gray");
         assert_eq!(format!("{}", Quality::Bitonal), "bitonal");
+    }
+
+    #[test]
+    fn test_quality_process() {
+        let storage = LocalStorage::new("./fixtures");
+        let cases = vec![
+            ("default", 300, 200),
+            ("color", 300, 200),
+            ("gray", 300, 200),
+            ("bitonal", 300, 200),
+        ];
+        for case in cases {
+            let quality = case.0.parse::<Quality>().unwrap();
+            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let processed_image = quality.process(image).unwrap();
+            assert_eq!(processed_image.width(), case.1);
+            assert_eq!(processed_image.height(), case.2);
+        }
     }
 }

@@ -294,6 +294,9 @@ impl Display for Size {
 
 #[cfg(test)]
 mod tests {
+    use crate::LocalStorage;
+    use crate::Storage;
+
     use super::*;
 
     #[test]
@@ -362,6 +365,32 @@ mod tests {
         for case in cases {
             let size = Size::from_str(case).unwrap();
             assert_eq!(format!("{size}"), case);
+        }
+    }
+
+    #[test]
+    fn test_size_process() {
+        let storage = LocalStorage::new("./fixtures");
+        let cases = vec![
+            ("max", 300, 200),
+            ("^max", 300, 200),
+            ("150,", 150, 100),
+            ("^360,", 360, 240),
+            (",150", 225, 150),
+            ("^,240", 360, 240),
+            ("pct:50", 150, 100),
+            ("^pct:120", 360, 240),
+            ("225,100", 225, 100),
+            ("^360,360", 360, 360),
+            ("!225,100", 150, 100),
+            ("^!360,360", 360, 240),
+        ];
+        for case in cases {
+            let size = case.0.parse::<Size>().unwrap();
+            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let resized_image = size.process(image).unwrap();
+            assert_eq!(resized_image.width(), case.1);
+            assert_eq!(resized_image.height(), case.2);
         }
     }
 }

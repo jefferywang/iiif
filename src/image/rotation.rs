@@ -140,6 +140,9 @@ impl Display for Rotation {
 
 #[cfg(test)]
 mod tests {
+    use crate::LocalStorage;
+    use crate::Storage;
+
     use super::*;
 
     #[test]
@@ -168,5 +171,25 @@ mod tests {
         assert_eq!(format!("{}", Rotation::Degrees(22.5)), "22.5");
         assert_eq!(format!("{}", Rotation::MirrorDegrees(270.0)), "!270");
         assert_eq!(format!("{}", Rotation::MirrorDegrees(15.75)), "!15.75");
+    }
+
+    #[test]
+    fn test_rotation_process() {
+        let storage = LocalStorage::new("./fixtures");
+        let cases = vec![
+            ("0", 300, 200),
+            ("180", 300, 200),
+            ("90", 200, 300),
+            ("!0", 300, 200),
+            ("!180", 300, 200),
+            ("22.5", 354, 300),
+        ];
+        for case in cases {
+            let rotation = case.0.parse::<Rotation>().unwrap();
+            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let rotated_image = rotation.process(image).unwrap();
+            assert_eq!(rotated_image.width(), case.1);
+            assert_eq!(rotated_image.height(), case.2);
+        }
     }
 }
