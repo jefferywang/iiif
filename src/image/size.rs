@@ -404,4 +404,16 @@ mod tests {
             assert_eq!(resized_image.height(), case.2);
         }
     }
+
+    #[test]
+    fn test_size_process_error() {
+        let storage = LocalStorage::new("./fixtures");
+        let cases = vec!["500,", ",500", "500,200", "200,500"];
+        for case in cases {
+            let size = case.parse::<Size>().unwrap();
+            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let result = size.process(image);
+            assert!(result.is_err());
+        }
+    }
 }

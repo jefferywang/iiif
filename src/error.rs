@@ -1,20 +1,13 @@
 use thiserror::Error;
 
 /// IiifError 定义了 IIIF 相关的错误类型
-#[derive(Debug, Error)]
+#[derive(Debug, Error, PartialEq)]
 pub enum IiifError {
     #[error("Invalid IIIF image URL: {0}")]
     InvalidIiifURL(String),
 
-    /// Invalid identifier.
-    #[error("Invalid identifier: {0}")]
-    InvalidIdentifier(String),
-
     #[error("Image open failed: {0}")]
     ImageOpenFailed(String),
-
-    #[error("Image encode failed: {0}")]
-    ImageEncodeFailed(String),
 
     /// 400 Bad Request
     ///

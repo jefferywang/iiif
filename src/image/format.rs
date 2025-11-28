@@ -143,7 +143,9 @@ impl Format {
                         rgb.height(),
                         image::ExtendedColorType::Rgb8,
                     )
-                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+                    .map_err(|e| {
+                        IiifError::InternalServerError(format!("Failed to encode JPEG image: {e}"))
+                    })?;
             }
             Format::Png => {
                 let rgba = image.to_rgba8();
@@ -156,7 +158,9 @@ impl Format {
                         rgba.height(),
                         image::ExtendedColorType::Rgba8,
                     )
-                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+                    .map_err(|e| {
+                        IiifError::InternalServerError(format!("Failed to encode PNG image: {e}"))
+                    })?;
             }
             Format::Webp => {
                 let rgba = image.to_rgba8();
@@ -169,7 +173,9 @@ impl Format {
                         rgba.height(),
                         image::ExtendedColorType::Rgba8,
                     )
-                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+                    .map_err(|e| {
+                        IiifError::InternalServerError(format!("Failed to encode WebP image: {e}"))
+                    })?;
             }
             Format::Gif => {
                 let rgba = image.to_rgba8();
@@ -182,7 +188,9 @@ impl Format {
                         rgba.height(),
                         image::ExtendedColorType::Rgba8,
                     )
-                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+                    .map_err(|e| {
+                        IiifError::InternalServerError(format!("Failed to encode GIF image: {e}"))
+                    })?;
             }
             Format::Tif => {
                 let rgba = image.to_rgba8();
@@ -195,10 +203,12 @@ impl Format {
                         rgba.height(),
                         image::ExtendedColorType::Rgba8,
                     )
-                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+                    .map_err(|e| {
+                        IiifError::InternalServerError(format!("Failed to encode TIF image: {e}"))
+                    })?;
             }
             Format::Jp2 => {
-                return Err(IiifError::ImageEncodeFailed(
+                return Err(IiifError::NotImplemented(
                     "JPEG 2000 encoding not yet implemented".to_string(),
                 ));
             }
@@ -216,7 +226,11 @@ impl Format {
                             rgb.height(),
                             image::ExtendedColorType::Rgb8,
                         )
-                        .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+                        .map_err(|e| {
+                            IiifError::InternalServerError(format!(
+                                "Failed to encode JPEG image: {e}"
+                            ))
+                        })?;
                 }
 
                 // 创建 PDF 文档
@@ -296,8 +310,9 @@ impl Format {
                 doc.trailer.set("Size", (doc.objects.len() + 1) as i64);
 
                 // 将文档写入字节流
-                doc.save_to(&mut bytes)
-                    .map_err(|e| IiifError::ImageEncodeFailed(e.to_string()))?;
+                doc.save_to(&mut bytes).map_err(|e| {
+                    IiifError::InternalServerError(format!("Failed to save PDF document: {e}"))
+                })?;
             }
         }
 
@@ -335,6 +350,31 @@ mod tests {
         assert_eq!(format!("{}", Format::Jp2), "jp2");
         assert_eq!(format!("{}", Format::Pdf), "pdf");
         assert_eq!(format!("{}", Format::Webp), "webp");
+    }
+
+    #[test]
+    fn test_format_get_content_type() {
+        assert_eq!(Format::Jpg.get_content_type(), "image/jpeg");
+        assert_eq!(Format::Tif.get_content_type(), "image/tiff");
+        assert_eq!(Format::Png.get_content_type(), "image/png");
+        assert_eq!(Format::Gif.get_content_type(), "image/gif");
+        assert_eq!(Format::Jp2.get_content_type(), "image/jp2");
+        assert_eq!(Format::Pdf.get_content_type(), "application/pdf");
+        assert_eq!(Format::Webp.get_content_type(), "image/webp");
+    }
+
+    #[test]
+    fn test_jp2_process() {
+        let storage = LocalStorage::new("./fixtures");
+        let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+        let result = Format::Jp2.process(image);
+        assert!(result.is_err());
+        assert_eq!(
+            result,
+            Err(IiifError::NotImplemented(
+                "JPEG 2000 encoding not yet implemented".to_string()
+            ))
+        );
     }
 
     #[test]

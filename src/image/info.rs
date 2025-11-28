@@ -458,11 +458,41 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_context_default() {
-        let mut info = ImageInfo::default();
-        println!("{}", serde_json::to_string(&info).unwrap());
+    fn test_context() {
+        let context = Context::default();
+        assert_eq!(
+            context,
+            Context::Single("http://iiif.io/api/image/3/context.json".to_string())
+        );
 
-        info.context = Context::new_list(&["http://iiif.io/api/image/2/context.json".to_string()]);
-        println!("{}", serde_json::to_string(&info).unwrap());
+        let context1 = Context::new_single();
+        assert_eq!(context, context1);
+
+        let context = Context::new_list(&["http://iiif.io/api/image/2/context.json".to_string()]);
+        assert_eq!(
+            context,
+            Context::List(vec![
+                "http://iiif.io/api/image/2/context.json".to_string(),
+                "http://iiif.io/api/image/3/context.json".to_string()
+            ])
+        );
+    }
+
+    #[test]
+    fn test_info_type() {
+        let info_type = InfoType::default();
+        assert_eq!(info_type, InfoType("ImageService3".to_string()));
+    }
+
+    #[test]
+    fn test_protocol() {
+        let protocol = Protocol::default();
+        assert_eq!(protocol, Protocol("http://iiif.io/api/image".to_string()));
+    }
+
+    #[test]
+    fn test_profile() {
+        let profile = Profile::default();
+        assert_eq!(profile, Profile::Level0);
     }
 }

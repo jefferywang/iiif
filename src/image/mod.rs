@@ -65,7 +65,7 @@ impl TryFrom<Url> for IiifImage {
 
 fn url_decode(value: &str) -> Result<String, crate::IiifError> {
     let decoded = urlencoding::decode(value)
-        .map_err(|_| crate::IiifError::InvalidIdentifier(format!("Invalid identifier: {value}")))?;
+        .map_err(|_| crate::IiifError::BadRequest(format!("Invalid identifier: {value}")))?;
     Ok(decoded.to_string())
 }
 
@@ -143,6 +143,34 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_url_error() {
+        let url = Url::parse("https://example.org/image-service/demo.jpg/full").unwrap();
+        let result = IiifImage::try_from(url);
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap(),
+            crate::IiifError::InvalidIiifURL("URL does not have enough segments".to_string())
+        );
+
+        let url =
+            Url::parse("https://example.org/image-service/demo.jpg/full/max/0/default").unwrap();
+        let result = IiifImage::try_from(url);
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap(),
+            crate::IiifError::InvalidIiifURL("Invalid quality.format segment: default".to_string())
+        );
+
+        let url = Url::parse("https://example.org/image-service//full/max/0/default.jpg").unwrap();
+        let result = IiifImage::try_from(url);
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap(),
+            crate::IiifError::InvalidIiifURL("Identifier cannot be empty".to_string())
+        );
+    }
+
+    #[test]
     fn test_default_image() {
         // {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
         let url_data =
@@ -163,6 +191,95 @@ mod tests {
         .unwrap();
         let iiif_image1 = IiifImage::try_from(url_data1).unwrap();
         assert_eq!(iiif_image1.identifier, "data/aaa.jpg");
+    }
+
+    #[test]
+    fn test_url_parse() {
+        let cases = vec![
+            (
+                "id1/full/max/0/default.jpg",
+                "id1",
+                Region::Full,
+                Size::Max,
+                Rotation::Degrees(0.0),
+                Quality::Default,
+                Format::Jpg,
+            ),
+            (
+                "id1/0,10,100,200/pct:50/90/default.png",
+                "id1",
+                Region::Rect(0, 10, 100, 200),
+                Size::Pct { n: 50.0 },
+                Rotation::Degrees(90.0),
+                Quality::Default,
+                Format::Png,
+            ),
+            (
+                "id1/pct:10,10,80,80/50,/22.5/color.jpg",
+                "id1",
+                Region::Pct(10.0, 10.0, 80.0, 80.0),
+                Size::W { w: 50 },
+                Rotation::Degrees(22.5),
+                Quality::Color,
+                Format::Jpg,
+            ),
+            (
+                "bb157hs6068/full/max/270/gray.jpg",
+                "bb157hs6068",
+                Region::Full,
+                Size::Max,
+                Rotation::Degrees(270.0),
+                Quality::Gray,
+                Format::Jpg,
+            ),
+            (
+                "ark:%2F12025%2F654xz321/full/max/0/default.jpg",
+                "ark:/12025/654xz321",
+                Region::Full,
+                Size::Max,
+                Rotation::Degrees(0.0),
+                Quality::Default,
+                Format::Jpg,
+            ),
+            (
+                "urn:foo:a123,456/full/max/0/default.jpg",
+                "urn:foo:a123,456",
+                Region::Full,
+                Size::Max,
+                Rotation::Degrees(0.0),
+                Quality::Default,
+                Format::Jpg,
+            ),
+            (
+                "urn:sici:1046-8188(199501)13:1%253C69:FTTHBI%253E2.0.TX;2-4/full/max/0/default.jpg",
+                "urn:sici:1046-8188(199501)13:1%3C69:FTTHBI%3E2.0.TX;2-4",
+                Region::Full,
+                Size::Max,
+                Rotation::Degrees(0.0),
+                Quality::Default,
+                Format::Jpg,
+            ),
+            (
+                "http:%2F%2Fexample.com%2F%3F54%23a/full/max/0/default.jpg",
+                "http://example.com/?54#a",
+                Region::Full,
+                Size::Max,
+                Rotation::Degrees(0.0),
+                Quality::Default,
+                Format::Jpg,
+            ),
+        ];
+        for case in cases {
+            let url = format!("https://example.org/{}", case.0);
+            let url_data = Url::parse(&url).unwrap();
+            let iiif_image = IiifImage::try_from(url_data).unwrap();
+            assert_eq!(iiif_image.identifier, case.1);
+            assert_eq!(iiif_image.region, case.2);
+            assert_eq!(iiif_image.size, case.3);
+            assert_eq!(iiif_image.rotation, case.4);
+            assert_eq!(iiif_image.quality, case.5);
+            assert_eq!(iiif_image.format, case.6);
+        }
     }
 
     #[test]
