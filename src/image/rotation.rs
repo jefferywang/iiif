@@ -10,7 +10,7 @@ use crate::IiifError;
 /// This module defines the `Rotation` enum for IIIF image rotation.
 ///
 /// ```
-/// use iiif::Rotation;
+/// use i3f::image::Rotation;
 /// use std::str::FromStr;
 ///
 /// let rotation_90 = Rotation::from_str("90").unwrap();
@@ -140,8 +140,8 @@ impl Display for Rotation {
 
 #[cfg(test)]
 mod tests {
-    use crate::LocalStorage;
-    use crate::Storage;
+    use crate::storage::LocalStorage;
+    use crate::storage::Storage;
 
     use super::*;
 

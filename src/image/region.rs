@@ -8,7 +8,7 @@ use std::str::FromStr;
 ///
 /// 使用示例：
 /// ```
-/// use iiif::Region;
+/// use i3f::image::Region;
 /// use std::str::FromStr;
 ///
 /// let region_full = Region::from_str("full").unwrap();
@@ -130,7 +130,7 @@ impl Region {
     ///
     /// Example:
     /// ```
-    /// use iiif::Region;
+    /// use i3f::image::Region;
     /// use image::DynamicImage;
     ///
     /// let region = Region::Full;
@@ -203,8 +203,8 @@ impl Region {
 
 #[cfg(test)]
 mod tests {
-    use crate::LocalStorage;
-    use crate::Storage;
+    use crate::storage::LocalStorage;
+    use crate::storage::Storage;
 
     use super::*;
 

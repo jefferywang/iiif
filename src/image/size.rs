@@ -8,7 +8,7 @@ use crate::IiifError;
 ///
 /// Example:
 /// ```
-/// use iiif::Size;
+/// use i3f::image::Size;
 /// use std::str::FromStr;
 ///
 /// let size = Size::from_str("max").unwrap();
@@ -294,8 +294,8 @@ impl Display for Size {
 
 #[cfg(test)]
 mod tests {
-    use crate::LocalStorage;
-    use crate::Storage;
+    use crate::storage::LocalStorage;
+    use crate::storage::Storage;
 
     use super::*;
 

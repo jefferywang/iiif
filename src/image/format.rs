@@ -17,7 +17,7 @@ use crate::IiifError;
 /// Format 格式定义
 ///
 /// ```
-/// use iiif::Format;
+/// use i3f::image::Format;
 /// use std::str::FromStr;
 ///
 /// let format_jpg = Format::from_str("jpg").unwrap();
@@ -307,7 +307,7 @@ impl Format {
 
 #[cfg(test)]
 mod tests {
-    use crate::{LocalStorage, Storage};
+    use crate::storage::{LocalStorage, Storage};
 
     use super::*;
 

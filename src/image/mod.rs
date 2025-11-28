@@ -1,3 +1,7 @@
+//! IIIF Image API 3.0 规范的实现(IIIF Image API 3.0 Implementation. )
+//!
+//! [官方文档(Official Documentation)](https://iiif.io/api/image/3.0/)
+//!
 mod format;
 mod info;
 mod quality;
@@ -5,7 +9,6 @@ mod region;
 mod result;
 mod rotation;
 mod size;
-mod storage;
 
 use std::str::FromStr;
 
@@ -16,8 +19,9 @@ pub use region::*;
 pub use result::*;
 pub use rotation::*;
 pub use size::*;
-pub use storage::*;
 use url::Url;
+
+use crate::storage::Storage;
 
 /// IiifImage 定义了 IIIF 图像的基本信息
 #[derive(Debug)]
@@ -104,11 +108,11 @@ impl IiifImage {
     ///
     /// Example:
     /// ```
-    /// use iiif::IiifImage;
+    /// use i3f::image::IiifImage;
     /// use std::str::FromStr;
     /// use url::Url;
-    /// use iiif::Storage;
-    /// use iiif::LocalStorage;
+    /// use i3f::storage::Storage;
+    /// use i3f::storage::LocalStorage;
     ///
     /// let url = Url::parse("https://example.org/image-service/demo.jpg/full/max/0/default.jpg").unwrap();
     /// let image = IiifImage::try_from(url).unwrap();
@@ -134,6 +138,8 @@ impl IiifImage {
 
 #[cfg(test)]
 mod tests {
+    use crate::storage::LocalStorage;
+
     use super::*;
 
     #[test]

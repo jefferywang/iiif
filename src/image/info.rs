@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Format, Quality};
+use crate::image::{Format, Quality};
 
 const IIIF_IMAGE_3_CONTEXT: &str = "http://iiif.io/api/image/3/context.json";
 

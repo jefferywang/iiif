@@ -1,15 +1,13 @@
 use std::path::{Path, PathBuf};
 
-pub trait Storage {
-    fn get_file_path(&self, identifier: &str) -> PathBuf;
-}
+use crate::storage::Storage;
 
 /// LocalStorage 本地存储
 ///
 /// Example:
 /// ```
-/// use iiif::LocalStorage;
-/// use iiif::Storage;
+/// use i3f::storage::LocalStorage;
+/// use i3f::storage::Storage;
 ///
 /// let storage = LocalStorage::new("./fixtures");
 /// println!("{:?}", storage.get_file_path("demo.jpg"));
@@ -35,8 +33,8 @@ impl LocalStorage {
     ///
     /// Example:
     /// ```
-    /// use iiif::LocalStorage;
-    /// use iiif::Storage;
+    /// use i3f::storage::LocalStorage;
+    /// use i3f::storage::Storage;
     ///
     /// let storage = LocalStorage::new("/data/images");
     /// println!("{:?}", storage.get_file_path("1234567890"));

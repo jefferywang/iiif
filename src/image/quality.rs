@@ -8,7 +8,7 @@ use crate::IiifError;
 /// Quality 画质定义
 ///
 /// ```
-/// use iiif::Quality;
+/// use i3f::image::Quality;
 /// use std::str::FromStr;
 ///
 /// let quality_default = Quality::from_str("default").unwrap();
@@ -107,7 +107,7 @@ impl Display for Quality {
 
 #[cfg(test)]
 mod tests {
-    use crate::{LocalStorage, Storage};
+    use crate::storage::{LocalStorage, Storage};
 
     use super::*;
 

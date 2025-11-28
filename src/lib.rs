@@ -1,8 +1,8 @@
 mod error;
-mod image;
+pub mod image;
+pub mod storage;
 
 pub use error::*;
-pub use image::*;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right
