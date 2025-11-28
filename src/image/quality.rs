@@ -1,6 +1,7 @@
 use std::{fmt::Display, str::FromStr};
 
 use image::DynamicImage;
+use serde::{Deserialize, Serialize};
 
 use crate::IiifError;
 
@@ -16,7 +17,8 @@ use crate::IiifError;
 /// let quality_color: Quality = "color".parse().unwrap();
 /// assert_eq!(quality_color, Quality::Color);
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Quality {
     /// Format: `default`
     ///
