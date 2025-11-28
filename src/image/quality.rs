@@ -55,7 +55,7 @@ impl FromStr for Quality {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s_trimmed = s.trim().to_lowercase();
         if s_trimmed.is_empty() {
-            return Err(IiifError::InvalidQualityFormat(s.to_string()));
+            return Err(IiifError::BadRequest("Invalid quelity".to_string()));
         }
 
         match s_trimmed.as_str() {
@@ -63,7 +63,7 @@ impl FromStr for Quality {
             "color" => Ok(Quality::Color),
             "gray" => Ok(Quality::Gray),
             "bitonal" => Ok(Quality::Bitonal),
-            _ => Err(IiifError::InvalidQualityFormat(s.to_string())),
+            _ => Err(IiifError::BadRequest("Invalid quelity".to_string())),
         }
     }
 }

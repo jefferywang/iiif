@@ -85,7 +85,7 @@ impl FromStr for Format {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s_trimmed = s.trim().to_lowercase();
         if s_trimmed.is_empty() {
-            return Err(IiifError::InvalidFormat(s.to_string()));
+            return Err(IiifError::BadRequest("Invalid file format".to_string()));
         }
 
         match s_trimmed.as_str() {
@@ -96,7 +96,7 @@ impl FromStr for Format {
             "jp2" => Ok(Format::Jp2),
             "pdf" => Ok(Format::Pdf),
             "webp" => Ok(Format::Webp),
-            _ => Err(IiifError::InvalidFormat(s.to_string())),
+            _ => Err(IiifError::BadRequest("Invalid file format".to_string())),
         }
     }
 }

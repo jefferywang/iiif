@@ -39,7 +39,9 @@ impl Rotation {
         match self {
             Rotation::Degrees(angle) => {
                 if *angle < 0.0 || *angle > 360.0 {
-                    return Err(IiifError::InvalidRotationFormat(self.to_string()));
+                    return Err(IiifError::BadRequest(
+                        "Rotation angle is out of range".to_string(),
+                    ));
                 }
                 if is_multiple_of_90(*angle) {
                     return Ok(standard_rotate(image, *angle));
@@ -48,7 +50,9 @@ impl Rotation {
             }
             Rotation::MirrorDegrees(angle) => {
                 if *angle < 0.0 || *angle > 360.0 {
-                    return Err(IiifError::InvalidRotationFormat(self.to_string()));
+                    return Err(IiifError::BadRequest(
+                        "Rotation angle is out of range".to_string(),
+                    ));
                 }
                 let image = image.fliph();
                 if is_multiple_of_90(*angle) {
@@ -108,7 +112,7 @@ impl FromStr for Rotation {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let s_trimmed = s.trim();
         if s_trimmed.is_empty() {
-            return Err(IiifError::InvalidRotationFormat(s.to_string()));
+            return Err(IiifError::BadRequest("Invalid rotation".to_string()));
         }
 
         let (is_mirror, angle_str) = if let Some(angle_str) = s.strip_prefix('!') {
@@ -119,7 +123,7 @@ impl FromStr for Rotation {
 
         let angle = angle_str
             .parse::<f32>()
-            .map_err(|_| IiifError::InvalidRotationFormat(s.to_string()))?;
+            .map_err(|_| IiifError::BadRequest("Invalid rotation".to_string()))?;
 
         Ok(if is_mirror {
             Rotation::MirrorDegrees(angle)

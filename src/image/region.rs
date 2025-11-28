@@ -75,7 +75,9 @@ impl FromStr for Region {
             "square" => Ok(Region::Square),
             s if s.starts_with("pct:") => Self::parse_pct_coordinates(&s[4..]),
             s if s.contains(',') => Self::parse_rect_coordinates(s),
-            _ => Err(error::IiifError::InvalidRegionFormat(s.to_string())),
+            _ => Err(error::IiifError::BadRequest(format!(
+                "Invalid region format: {s}"
+            ))),
         }
     }
 }
@@ -97,14 +99,18 @@ impl Region {
         let parts: Vec<&str> = coords.split(',').collect();
 
         if parts.len() != 4 {
-            return Err(error::IiifError::InvalidRegionFormat(coords.to_string()));
+            return Err(error::IiifError::BadRequest(
+                "Invalid rect region format".to_string(),
+            ));
         }
 
         let values: Result<Vec<u32>, _> = parts.iter().map(|part| part.parse::<u32>()).collect();
 
         match values {
             Ok(vals) => Ok(Region::Rect(vals[0], vals[1], vals[2], vals[3])),
-            Err(_) => Err(error::IiifError::InvalidRegionFormat(coords.to_string())),
+            Err(_) => Err(error::IiifError::BadRequest(
+                "Invalid rect region format".to_string(),
+            )),
         }
     }
 
@@ -113,14 +119,18 @@ impl Region {
         let parts: Vec<&str> = coords.split(',').collect();
 
         if parts.len() != 4 {
-            return Err(error::IiifError::InvalidRegionFormat(coords.to_string()));
+            return Err(error::IiifError::BadRequest(
+                "Invalid rect region format".to_string(),
+            ));
         }
 
         let values: Result<Vec<f32>, _> = parts.iter().map(|part| part.parse::<f32>()).collect();
 
         match values {
             Ok(vals) => Ok(Region::Pct(vals[0], vals[1], vals[2], vals[3])),
-            Err(_) => Err(error::IiifError::InvalidRegionFormat(coords.to_string())),
+            Err(_) => Err(error::IiifError::BadRequest(
+                "Invalid rect region format".to_string(),
+            )),
         }
     }
 
@@ -163,12 +173,12 @@ impl Region {
             }
             Region::Rect(x, y, w, h) => {
                 if *w == 0 || *h == 0 {
-                    return Err(error::IiifError::RegionIsInvalid(format!(
+                    return Err(error::IiifError::BadRequest(format!(
                         "Width or height is 0: {self}",
                     )));
                 }
                 if *x >= width || *y >= height {
-                    return Err(error::IiifError::RegionIsInvalid(format!(
+                    return Err(error::IiifError::BadRequest(format!(
                         "X or Y is out of bounds: {self}",
                     )));
                 }
@@ -179,12 +189,12 @@ impl Region {
             }
             Region::Pct(x, y, w, h) => {
                 if *w == 0.0 || *h == 0.0 {
-                    return Err(error::IiifError::RegionIsInvalid(format!(
+                    return Err(error::IiifError::BadRequest(format!(
                         "Width or height is 0: {self}",
                     )));
                 }
                 if *x >= 100.0 || *y >= 100.0 {
-                    return Err(error::IiifError::RegionIsInvalid(format!(
+                    return Err(error::IiifError::BadRequest(format!(
                         "X or Y is out of bounds: {self}",
                     )));
                 }

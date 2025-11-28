@@ -3,29 +3,6 @@ use thiserror::Error;
 /// IiifError 定义了 IIIF 相关的错误类型
 #[derive(Debug, Error)]
 pub enum IiifError {
-    /// Invalid region format, accepted formats are `full`, `square`, `x,y,w,h` or `pct:x,y,w,h`.
-    ///
-    /// region 格式无效，支持的格式 `full`, `square`, `x,y,w,h` 或 `pct:x,y,w,h`。
-    #[error("Invalid region format: {0}")]
-    InvalidRegionFormat(String),
-
-    /// Invalid size format, accepted formats include `max`, `^max`, `w,`, `^w,`, `,h`, `^,h`, `pct:n`,
-    /// `^pct:n`, `w,h`, `^w,h`, `^!w,h`.
-    #[error("Invalid size format: {0}")]
-    InvalidSizeFormat(String),
-
-    /// Invalid quality format, accepted formats include `default`, `bitonal`, `gray`, `color`.
-    #[error("Invalid quality format: {0}")]
-    InvalidQualityFormat(String),
-
-    /// Invalid rotation format, accepted formats include `n` or `!n`.
-    #[error("Invalid rotation format: {0}")]
-    InvalidRotationFormat(String),
-
-    /// Invalid format, accepted formats include `jpg`, `tif`, `png`, `gif`, `jp2`, `pdf`, `webp`.
-    #[error("Invalid format: {0}")]
-    InvalidFormat(String),
-
     #[error("Invalid IIIF image URL: {0}")]
     InvalidIiifURL(String),
 
@@ -36,15 +13,64 @@ pub enum IiifError {
     #[error("Image open failed: {0}")]
     ImageOpenFailed(String),
 
-    #[error("Region is invalid: {0}")]
-    RegionIsInvalid(String),
-
-    #[error("Image not found")]
-    ImageNotFound,
-
     #[error("Image encode failed: {0}")]
     ImageEncodeFailed(String),
 
-    #[error("Internal server error")]
-    InternalServerError,
+    /// 400 Bad Request
+    ///
+    /// 服务器无法满足请求，因为客户端发出的请求语法不正确。
+    ///
+    /// The server cannot fulfill the request, as the syntax of the request issued by the client is incorrect.
+    #[error("{0}")]
+    BadRequest(String),
+
+    /// 401 Unauthorized
+    ///
+    /// 请求要求身份验证。未提供凭据或提供凭据但无效。
+    ///
+    /// The request requires user authentication. The client must authenticate itself to get the requested response.
+    #[error("{0}")]
+    Unauthorized(String),
+
+    /// 403 Forbidden
+    ///
+    /// 用户（无论是否已认证）都不被允许执行请求的操作。
+    ///
+    /// The user, authenticated or not, is not permitted to perform the requested operation.
+    #[error("{0}")]
+    Forbidden(String),
+
+    /// 404 Not Found
+    ///
+    /// 通过标识符指定的图像资源不存在，一个或多个参数的值不受此图像服务支持，或请求的尺寸大于指定的限制。
+    ///
+    /// The image resource specified by identifier does not exist, the value of one or more of
+    /// the parameters is not supported for this image service, or the requested size is greater
+    /// than the limits specified.
+    #[error("{0}")]
+    NotFound(String),
+
+    /// 500 Internal Server Error
+    ///
+    /// 服务器遇到意外错误，导致无法满足请求。
+    ///
+    /// The server encountered an unexpected error that prevented it from fulfilling the request.
+    #[error("{0}")]
+    InternalServerError(String),
+
+    /// 501 Not Implemented
+    ///
+    /// 服务器收到了一个有效的 IIIF 请求，但该请求未实现。
+    ///
+    /// The server received a valid IIIF request that is not implemented.
+    #[error("{0}")]
+    NotImplemented(String),
+
+    /// 503 Service Unavailable
+    ///
+    /// 服务器因负载/维护问题繁忙/暂时不可用。
+    ///
+    /// The server is busy/temporarily unavailable due to load/maintenance problems.
+    #[error("{0}")]
+    ServiceUnavailable(String),
 }

@@ -129,7 +129,8 @@ impl FromStr for Size {
             .unwrap_or((false, s.as_str()));
 
         // 解析具体格式
-        Self::parse_content(content, caret).ok_or(IiifError::InvalidSizeFormat(s))
+        Self::parse_content(content, caret)
+            .ok_or(IiifError::BadRequest("Invalid size format".to_string()))
     }
 }
 
@@ -144,7 +145,9 @@ impl Size {
             Self::CMax => Ok(image),
             Self::W { w } => {
                 if *w > image.width() {
-                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                    return Err(IiifError::BadRequest(
+                        "Width is greater than image width".to_string(),
+                    ));
                 }
                 Ok(image.resize(*w, image.height(), filter_type))
             }
@@ -155,7 +158,9 @@ impl Size {
             }
             Self::H { h } => {
                 if *h > image.height() {
-                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                    return Err(IiifError::BadRequest(
+                        "Height is greater than image height".to_string(),
+                    ));
                 }
                 Ok(image.resize(image.width(), *h, filter_type))
             }
@@ -166,7 +171,9 @@ impl Size {
             }
             Self::Pct { n } => {
                 if *n > 100.0 {
-                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                    return Err(IiifError::BadRequest(
+                        "Percentage is greater than 100".to_string(),
+                    ));
                 }
                 Ok(image.resize(
                     (image.width() as f32 * *n / 100.0).round() as u32,
@@ -181,14 +188,18 @@ impl Size {
             )),
             Self::WH { w, h } => {
                 if *w > image.width() || *h > image.height() {
-                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                    return Err(IiifError::BadRequest(
+                        "Width or height is greater than image width or height".to_string(),
+                    ));
                 }
                 Ok(image.resize_exact(*w, *h, filter_type))
             }
             Self::CWH { w, h } => Ok(image.resize_exact(*w, *h, filter_type)),
             Self::LWH { w, h } => {
                 if *w > image.width() || *h > image.height() {
-                    return Err(IiifError::InvalidSizeFormat(self.to_string()));
+                    return Err(IiifError::BadRequest(
+                        "Width or height is greater than image width or height".to_string(),
+                    ));
                 }
                 Ok(image.resize(*w, *h, filter_type))
             }
