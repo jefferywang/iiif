@@ -134,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_quality_process() {
-        let storage = LocalStorage::new("./fixtures");
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
         let cases = vec![
             ("default", 300, 200),
             ("color", 300, 200),
@@ -143,7 +143,8 @@ mod tests {
         ];
         for case in cases {
             let quality = case.0.parse::<Quality>().unwrap();
-            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let image = storage.get_origin_file("demo.jpg").unwrap();
+            let image = image::load_from_memory(&image).unwrap();
             let processed_image = quality.process(image).unwrap();
             assert_eq!(processed_image.width(), case.1);
             assert_eq!(processed_image.height(), case.2);

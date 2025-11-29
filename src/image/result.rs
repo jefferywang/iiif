@@ -12,3 +12,15 @@ impl ProcessResult {
         Self { content_type, data }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_process_result() {
+        let result = ProcessResult::new("image/jpeg".to_string(), vec![1, 2, 3]);
+        assert_eq!(result.content_type, "image/jpeg");
+        assert_eq!(result.data, vec![1, 2, 3]);
+    }
+}

@@ -365,8 +365,9 @@ mod tests {
 
     #[test]
     fn test_jp2_process() {
-        let storage = LocalStorage::new("./fixtures");
-        let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
+        let image = storage.get_origin_file("demo.jpg").unwrap();
+        let image = image::load_from_memory(&image).unwrap();
         let result = Format::Jp2.process(image);
         assert!(result.is_err());
         assert_eq!(
@@ -379,7 +380,8 @@ mod tests {
 
     #[test]
     fn test_format_process() {
-        let storage = LocalStorage::new("./fixtures");
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
+
         let cases = vec![
             ("jpg", 300, 200),
             ("tif", 300, 200),
@@ -390,7 +392,8 @@ mod tests {
         ];
         for case in cases {
             let format = case.0.parse::<Format>().unwrap();
-            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let image = storage.get_origin_file("demo.jpg").unwrap();
+            let image = image::load_from_memory(&image).unwrap();
             let result = format.process(image).unwrap();
             if format == Format::Pdf {
                 let header = result[..4].to_vec();

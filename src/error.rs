@@ -6,9 +6,6 @@ pub enum IiifError {
     #[error("Invalid IIIF image URL: {0}")]
     InvalidIiifURL(String),
 
-    #[error("Image open failed: {0}")]
-    ImageOpenFailed(String),
-
     /// 400 Bad Request
     ///
     /// 服务器无法满足请求，因为客户端发出的请求语法不正确。

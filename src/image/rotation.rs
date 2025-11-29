@@ -179,7 +179,8 @@ mod tests {
 
     #[test]
     fn test_rotation_process() {
-        let storage = LocalStorage::new("./fixtures");
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
+
         let cases = vec![
             ("0", 300, 200),
             ("180", 300, 200),
@@ -192,7 +193,8 @@ mod tests {
         ];
         for case in cases {
             let rotation = case.0.parse::<Rotation>().unwrap();
-            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let image = storage.get_origin_file("demo.jpg").unwrap();
+            let image = image::load_from_memory(&image).unwrap();
             let rotated_image = rotation.process(image).unwrap();
             assert_eq!(rotated_image.width(), case.1);
             assert_eq!(rotated_image.height(), case.2);

@@ -381,7 +381,7 @@ mod tests {
 
     #[test]
     fn test_size_process() {
-        let storage = LocalStorage::new("./fixtures");
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
         let cases = vec![
             ("max", 300, 200),
             ("^max", 300, 200),
@@ -398,7 +398,8 @@ mod tests {
         ];
         for case in cases {
             let size = case.0.parse::<Size>().unwrap();
-            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let image = storage.get_origin_file("demo.jpg").unwrap();
+            let image = image::load_from_memory(&image).unwrap();
             let resized_image = size.process(image).unwrap();
             assert_eq!(resized_image.width(), case.1);
             assert_eq!(resized_image.height(), case.2);
@@ -407,11 +408,12 @@ mod tests {
 
     #[test]
     fn test_size_process_error() {
-        let storage = LocalStorage::new("./fixtures");
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
         let cases = vec!["500,", ",500", "500,200", "200,500"];
         for case in cases {
             let size = case.parse::<Size>().unwrap();
-            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let image = storage.get_origin_file("demo.jpg").unwrap();
+            let image = image::load_from_memory(&image).unwrap();
             let result = size.process(image);
             assert!(result.is_err());
         }

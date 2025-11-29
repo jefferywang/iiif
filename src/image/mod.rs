@@ -10,7 +10,7 @@ mod result;
 mod rotation;
 mod size;
 
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 pub use format::*;
 pub use info::*;
@@ -69,6 +69,11 @@ fn url_decode(value: &str) -> Result<String, crate::IiifError> {
     Ok(decoded.to_string())
 }
 
+fn url_encode(value: &str) -> String {
+    let encoded = urlencoding::encode(value);
+    encoded.to_string()
+}
+
 impl IiifImage {
     /// 验证标识符
     fn validate_identifier(identifier: &str) -> Result<String, crate::IiifError> {
@@ -116,13 +121,21 @@ impl IiifImage {
     ///
     /// let url = Url::parse("https://example.org/image-service/demo.jpg/full/max/0/default.jpg").unwrap();
     /// let image = IiifImage::try_from(url).unwrap();
-    /// let storage = LocalStorage::new("./fixtures");
+    /// let storage = LocalStorage::new("./fixtures", "./fixtures/out");
     /// let image_data = image.process(&storage).unwrap();
     /// ```
     pub fn process(&self, storage: &dyn Storage) -> Result<ProcessResult, crate::IiifError> {
-        let local_path = storage.get_file_path(&self.identifier);
-        let image = image::open(local_path)
-            .map_err(|e| crate::IiifError::ImageOpenFailed(e.to_string()))?;
+        // 如果 iiif 文件存在，则直接返回
+        if let Ok(iiif_file) = storage.get_iiif_file(self) {
+            return Ok(iiif_file);
+        }
+
+        // 获取原始文件
+        let origin_file = storage
+            .get_origin_file(&self.identifier)
+            .map_err(crate::IiifError::InternalServerError)?;
+        let image = image::load_from_memory(&origin_file)
+            .map_err(|e| crate::IiifError::InternalServerError(e.to_string()))?;
         // 处理 region 数据
         let image = self.region.process(image)?;
         // 处理 size 数据
@@ -132,7 +145,29 @@ impl IiifImage {
         let image = self.quality.process(image)?;
         let result = self.format.process(image)?;
         let content_type = self.format.get_content_type();
+
+        // 保存 iiif 文件
+        storage
+            .save_iiif_file(self, &result)
+            .map_err(crate::IiifError::InternalServerError)?;
+
+        // 返回结果
         Ok(ProcessResult::new(content_type.to_string(), result))
+    }
+}
+
+impl Display for IiifImage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}/{}/{}/{}/{}.{}",
+            url_encode(&self.identifier),
+            self.region,
+            self.size,
+            self.rotation,
+            self.quality,
+            self.format
+        )
     }
 }
 
@@ -284,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_process() {
-        let storage = LocalStorage::new("./fixtures");
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
         let cases = vec![("/square/150,/15/color.png", "image/png", 184, 184)];
         for case in cases {
             let url_str = format!("https://example.org/image-service/demo.jpg{}", case.0);

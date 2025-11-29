@@ -285,7 +285,8 @@ mod tests {
 
     #[test]
     fn test_region_process() {
-        let storage = LocalStorage::new("./fixtures");
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
+
         let cases = vec![
             ("full", 300, 200),
             ("square", 200, 200),
@@ -297,7 +298,8 @@ mod tests {
 
         for case in cases {
             let region = case.0.parse::<Region>().unwrap();
-            let image = image::open(storage.get_file_path("demo.jpg")).unwrap();
+            let image = storage.get_origin_file("demo.jpg").unwrap();
+            let image = image::load_from_memory(&image).unwrap();
             let cropped_image = region.process(image).unwrap();
             assert_eq!(cropped_image.width(), case.1);
             assert_eq!(cropped_image.height(), case.2);

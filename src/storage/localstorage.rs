@@ -1,6 +1,13 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::{Path, PathBuf},
+};
 
-use crate::storage::Storage;
+use crate::{
+    image::{IiifImage, ProcessResult},
+    storage::Storage,
+};
 
 /// LocalStorage 本地存储
 ///
@@ -9,16 +16,48 @@ use crate::storage::Storage;
 /// use i3f::storage::LocalStorage;
 /// use i3f::storage::Storage;
 ///
-/// let storage = LocalStorage::new("./fixtures");
-/// println!("{:?}", storage.get_file_path("demo.jpg"));
+/// let storage = LocalStorage::new("./fixtures", "./fixtures/out");
 /// ```
 pub struct LocalStorage {
-    base_path: PathBuf,
+    origin_dir: PathBuf,
+    iiif_dir: PathBuf,
 }
 
 impl Storage for LocalStorage {
-    fn get_file_path(&self, identifier: &str) -> PathBuf {
-        self.base_path.join(identifier)
+    fn get_origin_file(&self, identifier: &str) -> Result<Vec<u8>, String> {
+        let path = self.origin_dir.join(identifier);
+        let mut file = File::open(path).map_err(|e| e.to_string())?;
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+        Ok(bytes)
+    }
+
+    fn get_iiif_file(&self, params: &IiifImage) -> Result<ProcessResult, String> {
+        let iiif_path = params.to_string();
+        let path = self.iiif_dir.join(iiif_path);
+        println!("iiif_dir: {:?}", self.iiif_dir);
+        println!("path: {:?}", path);
+        let mut file = File::open(path).map_err(|e| e.to_string())?;
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes).map_err(|e| e.to_string())?;
+        Ok(ProcessResult {
+            content_type: params.format.get_content_type().to_string(),
+            data: bytes,
+        })
+    }
+
+    fn save_iiif_file(&self, params: &IiifImage, data: &[u8]) -> Result<(), String> {
+        let iiif_path = params.to_string();
+        let path = self.iiif_dir.join(iiif_path);
+        let dir = path.parent();
+        if let Some(dir) = dir {
+            std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+        } else {
+            return Err("Failed to get parent directory".to_string());
+        }
+        let mut file = File::create(path).map_err(|e| e.to_string())?;
+        file.write_all(data).map_err(|e| e.to_string())?;
+        Ok(())
     }
 }
 
@@ -36,26 +75,42 @@ impl LocalStorage {
     /// use i3f::storage::LocalStorage;
     /// use i3f::storage::Storage;
     ///
-    /// let storage = LocalStorage::new("/data/images");
-    /// println!("{:?}", storage.get_file_path("1234567890"));
+    /// let storage = LocalStorage::new("/data/images", "/data/iiif");
     /// ```
-    pub fn new<P: AsRef<Path>>(base_path: P) -> Self {
+    pub fn new<P: AsRef<Path>>(base_dir: P, iiif_dir: P) -> Self {
         Self {
-            base_path: base_path.as_ref().to_path_buf(),
+            origin_dir: base_dir.as_ref().to_path_buf(),
+            iiif_dir: iiif_dir.as_ref().to_path_buf(),
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::image::{Format, Quality, Region, Rotation, Size};
+
     use super::*;
 
     #[test]
-    fn test_get_local_file_path() {
-        let storage = LocalStorage::new("./fixtures");
-        assert_eq!(
-            storage.get_file_path("image3.png"),
-            PathBuf::from("./fixtures/image3.png"),
-        );
+    fn test_get_iiif_file() {
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
+        let origin_file = storage.get_origin_file("demo.jpg").unwrap();
+        let image = image::load_from_memory(&origin_file).unwrap();
+        assert_eq!(image.width(), 300);
+        assert_eq!(image.height(), 200);
+
+        let params = IiifImage {
+            identifier: "demo.jpg".to_string(),
+            region: Region::Full,
+            size: Size::Max,
+            rotation: Rotation::Degrees(0.0),
+            quality: Quality::Default,
+            format: Format::Jpg,
+        };
+        let result = storage.get_iiif_file(&params).unwrap();
+        assert_eq!(result.content_type, "image/jpeg");
+
+        let result = storage.save_iiif_file(&params, &result.data);
+        assert!(result.is_ok());
     }
 }
