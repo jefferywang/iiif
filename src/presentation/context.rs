@@ -41,3 +41,32 @@ impl Context {
         Context::List(contexts)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_context_default() {
+        let context = Context::presentation_default();
+        assert_eq!(
+            context,
+            Context::Single(IIIF_PRESENTATION_3_CONTEXT.to_string())
+        );
+
+        let context = Context::image_default();
+        assert_eq!(context, Context::Single(IIIF_IMAGE_3_CONTEXT.to_string()));
+
+        let context = Context::new_presentation_list(&[IIIF_PRESENTATION_3_CONTEXT.to_string()]);
+        assert_eq!(
+            context,
+            Context::List(vec![IIIF_PRESENTATION_3_CONTEXT.to_string()])
+        );
+
+        let context = Context::new_image_list(&[IIIF_IMAGE_3_CONTEXT.to_string()]);
+        assert_eq!(
+            context,
+            Context::List(vec![IIIF_IMAGE_3_CONTEXT.to_string()])
+        );
+    }
+}

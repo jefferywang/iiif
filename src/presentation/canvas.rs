@@ -148,3 +148,15 @@ impl Default for Canvas {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_canvas_default() {
+        let canvas = Canvas::default();
+        assert_eq!(canvas.id, "");
+        assert_eq!(canvas.r#type, "Canvas");
+    }
+}

@@ -166,5 +166,17 @@ pub enum RangeItem {
     /// 画布。
     ///
     /// Canvas.
-    Canvas(Canvas),
+    Canvas(Box<Canvas>),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_range_default() {
+        let range = Range::default();
+        assert_eq!(range.id, "");
+        assert_eq!(range.r#type, "Range");
+    }
 }

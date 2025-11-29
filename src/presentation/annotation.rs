@@ -86,3 +86,22 @@ impl Default for Annotation {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_annotation_page_default() {
+        let annotation_page = AnnotationPage::default();
+        assert_eq!(annotation_page.id, "");
+        assert_eq!(annotation_page.r#type, "AnnotationPage");
+    }
+
+    #[test]
+    fn test_annotation_default() {
+        let annotation = Annotation::default();
+        assert_eq!(annotation.id, "");
+        assert_eq!(annotation.r#type, "Annotation");
+    }
+}

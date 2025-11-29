@@ -183,3 +183,15 @@ impl Default for Manifest {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_manifest_default() {
+        let manifest = Manifest::default();
+        assert_eq!(manifest.id, "");
+        assert_eq!(manifest.r#type, "Manifest");
+    }
+}

@@ -134,3 +134,15 @@ impl Default for Collection {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_collection_default() {
+        let collection = Collection::default();
+        assert_eq!(collection.id, "");
+        assert_eq!(collection.r#type, "Collection");
+    }
+}
