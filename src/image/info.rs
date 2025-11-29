@@ -1,13 +1,14 @@
 use serde::{Deserialize, Serialize};
 
-use crate::image::{Format, Quality};
-
-const IIIF_IMAGE_3_CONTEXT: &str = "http://iiif.io/api/image/3/context.json";
+use crate::{
+    image::{Format, Quality},
+    presentation::{Context, Resource},
+};
 
 /// ImageInfo 定义了 IIIF 图像的基本信息
 ///
 /// Several technical properties
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageInfo {
     /// `@context` 属性应作为 JSON 表示的第一个键值对出现。它的值必须是 URI `http://iiif.io/api/image/3/context.json`
@@ -19,7 +20,7 @@ pub struct ImageInfo {
     /// the URI `http://iiif.io/api/image/3/context.json` as the last item. The @context tells Linked
     /// Data processors how to interpret the image information. If extensions are used then their
     /// context definitions should be included in this top-level @context property.
-    #[serde(rename = "@context", default = "Context::default")]
+    #[serde(rename = "@context", default = "Context::image_default")]
     pub context: Context,
 
     /// 图像的基础 URI 在 [URI 语法](https://iiif.io/api/image/3.0/#2-uri-syntax)中定义，包括方案、服务器、前缀和标识符，无尾斜杠。
@@ -31,15 +32,15 @@ pub struct ImageInfo {
     /// Image API 的类型。该值必须是字符串 `ImageService3`。
     ///
     /// The type for the Image API. The value must be the string `ImageService3`.
-    #[serde(default = "InfoType::default")]
-    pub r#type: InfoType,
+    #[serde(default = "image_service3_type")]
+    pub r#type: String,
 
     /// URI `http://iiif.io/api/image`，可用于确定该文档描述的是一个图像服务，该服务是 IIIF 图像 API 的一个版本。
     ///
     /// The URI `http://iiif.io/api/image` which can be used to determine that the document describes
     /// an image service which is a version of the IIIF Image API.
-    #[serde(default = "Protocol::default")]
-    pub protocol: Protocol,
+    #[serde(default = "default_image_protocol")]
+    pub protocol: String,
 
     /// 字符串表示服务完全支持的最高[合规等级](https://iiif.io/api/image/3.0/#6-compliance-level-and-profile-document) 。
     /// 该值必须是 `level0`、`level1` 或 `level2` 之一。
@@ -93,6 +94,12 @@ pub struct ImageInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sizes: Option<Vec<SizeInfo>>,
 
+    /// 支持的瓦片列表
+    ///
+    /// A list of supported tile values.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tiles: Option<Vec<TileInfo>>,
+
     /// 支持的格式列表
     ///
     /// extra formats supported by the service.
@@ -138,7 +145,7 @@ pub struct ImageInfo {
     /// A link to another resource that references this image service, for example a link to a Canvas or Manifest. The value must be an array of
     /// JSON objects. Each item must have the `id` and `type` properties, and should have the `label` property.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub part_of: Option<LinkInfo>,
+    pub part_of: Option<Vec<Resource>>,
 
     /// 指向与该资源相关的外部机器可读资源的链接，如 XML 或 RDF 描述。应提供外部资源的属性，帮助客户在多个描述（如提供）中选择，并合理利用文档。
     /// 文档的 URI 必须识别特定格式中数据的单一表示。该值必须是 JSON 对象数组。每个项目必须具备 `id` 和 `type` 属性，并应具备`label` 、
@@ -150,7 +157,7 @@ pub struct ImageInfo {
     /// in a particular format. The value must be an array of JSON objects. Each item must have the `id` and `type` properties,
     /// and should have the `label`, `format` and `profile` properties.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub see_also: Option<LinkInfo>,
+    pub see_also: Option<Vec<Resource>>,
 
     /// 对客户端可能直接交互以获取额外信息或功能的外部服务的引用，例如指向认证服务的链接。该值必须是 JSON 对象数组。每个对象会根据服务定义拥有属性，
     /// 但必须具备 `id` 和`type`属性，或 `@id` 和 `@type` 属性，以便向后兼容其他 IIIF API。每个对象都应该有一个配置文件属性。
@@ -162,74 +169,41 @@ pub struct ImageInfo {
     /// for backwards compatibility with other IIIF APIs. Each object should have a profile property. See the
     /// [Service Registry](https://iiif.io/api/annex/services/) for known service types.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub service: Option<LinkInfo>,
+    pub service: Option<Vec<Resource>>,
 }
 
-/// `@context` 属性应作为 JSON 表示的第一个键值对出现。它的值必须是 URI `http://iiif.io/api/image/3/context.json`
-/// 或以 URI `http://iiif.io/api/image/3/context.json` 为最后一项的 JSON 数组。`@context` 告诉链接数据处理器如何
-/// 解读图像信息。如果使用扩展，则其上下文定义应包含在这个顶层 `@context` 属性中。
-///
-/// The @context property should appear as the very first key-value pair of the JSON representation.
-/// Its value must be either the URI `http://iiif.io/api/image/3/context.json` or a JSON array with
-/// the URI `http://iiif.io/api/image/3/context.json` as the last item. The @context tells Linked
-/// Data processors how to interpret the image information. If extensions are used then their
-/// context definitions should be included in this top-level @context property.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum Context {
-    // 单个 context
-    Single(String),
-
-    // 多个 context
-    List(Vec<String>),
+fn image_service3_type() -> String {
+    "ImageService3".to_string()
 }
 
-impl Default for Context {
+fn default_image_protocol() -> String {
+    "http://iiif.io/api/image".to_string()
+}
+
+impl Default for ImageInfo {
     fn default() -> Self {
-        Self::Single(IIIF_IMAGE_3_CONTEXT.to_string())
-    }
-}
-
-impl Context {
-    pub fn new_single() -> Self {
-        Self::default()
-    }
-
-    pub fn new_list(contexts: &[String]) -> Self {
-        // 如果包含 IIIF_IMAGE_3_CONTEXT，则删除，并放到最后面，以符合规范要求
-        let mut contexts = contexts.to_vec();
-        if let Some(index) = contexts.iter().position(|c| c == IIIF_IMAGE_3_CONTEXT) {
-            contexts.remove(index);
+        Self {
+            id: "".to_string(),
+            context: Context::image_default(),
+            r#type: image_service3_type(),
+            protocol: default_image_protocol(),
+            profile: Profile::default(),
+            width: 0,
+            height: 0,
+            max_width: None,
+            max_height: None,
+            max_area: None,
+            sizes: None,
+            tiles: None,
+            extra_formats: None,
+            preferred_formats: None,
+            rights: None,
+            extra_qualities: None,
+            extra_features: None,
+            part_of: None,
+            see_also: None,
+            service: None,
         }
-        contexts.push(IIIF_IMAGE_3_CONTEXT.to_string());
-        Self::List(contexts)
-    }
-}
-
-/// Image API 的类型。该值必须是字符串 `ImageService3`。
-///
-/// The type for the Image API. The value must be the string `ImageService3`.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct InfoType(String);
-
-impl Default for InfoType {
-    fn default() -> Self {
-        Self("ImageService3".to_string())
-    }
-}
-
-/// 协议，URI `http://iiif.io/api/image`，可用于确定该文档描述的是一个图像服务，该服务是 IIIF 图像 API 的一个版本。
-///
-/// The protocol, URI `http://iiif.io/api/image`, can be used to determine that the document describes
-/// an image service which is a version of the IIIF Image API.
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct Protocol(String);
-
-impl Default for Protocol {
-    fn default() -> Self {
-        Self("http://iiif.io/api/image".to_string())
     }
 }
 
@@ -276,7 +250,6 @@ pub struct SizeInfo {
 #[serde(rename_all = "PascalCase")]
 pub enum SizeType {
     #[default]
-    #[serde(rename = "Size")]
     Size,
 }
 
@@ -371,8 +344,14 @@ pub enum Feature {
 
     /// 可以请求一个方形区域，其中宽度和高度等于完整图像的较短尺寸。
     ///
-    /// Image rotation may be requested using values other than multiples of 90 degrees.
+    /// A square region may be requested, where the width and height
+    /// are equal to the shorter dimension of the full image.
     RegionSquare,
+
+    /// 图像旋转请求可以任意角度进行。
+    ///
+    /// Image rotation may be requested using arbitrary angles.
+    RotationArbitrary,
 
     /// 图像旋转请求可以90度的倍数进行。
     ///
@@ -410,85 +389,9 @@ pub enum Feature {
     SizeUpscaling,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LinkInfo {
-    /// 外部资源的 URI。`@id` 属性可用于 `service` 对象中 ，如上所述，以实现向后兼容性。
-    ///
-    /// The URI of the external resource.
-    /// The `@id` property may be used in `service` objects for backwards compatibility as described above.
-    #[serde(rename = "@id")]
-    id: String,
-
-    /// 该资源的类型或类别。[Presentation API](https://iiif.io/api/presentation/3.0/#type) 中给出了基本类型的建议，如图片、
-    /// 文本或音频。（`@type` 属性可用于`service`对象， 如上所述的向后兼容。）
-    ///
-    /// The type or class of this resource. Recommendations for basic types such as image, text or audio are given in
-    /// the [Presentation API](https://iiif.io/api/presentation/3.0/#type).(The `@type` property may be used in `service`
-    /// objects for backwards compatibility as described above.)
-    #[serde(rename = "@type")]
-    r#type: String,
-
-    /// 为本资源提供一个易于阅读的标签。`label`属性可以完全国际化，每种语言可以有多个值。该模式在
-    /// [Presentation API 的语言部分](https://iiif.io/api/presentation/3.0/#language-of-property-values)有更详细的描述。
-    ///
-    /// A human-readable label for this resource. The label property can be fully internationalized, and each language
-    /// can have multiple values. This pattern is described in more detail in [the languages section of
-    /// the Presentation API](https://iiif.io/api/presentation/3.0/#language-of-property-values).
-    label: Option<String>,
-
-    /// 该内容资源的特定媒体类型（通常称为 MIME 类型），例如“image/jpeg”。这对于区分同一整体资源的不同格式非常重要，例如区分 XML 文本和纯文本。
-    /// 该值必须是字符串，并且应是该资源被取消引用时返回的 Content-Type 头部的值。
-    ///
-    /// The specific media type (often called a MIME type) for this content resource, for example “image/jpeg”. This is important
-    /// for distinguishing different formats of the same overall type of resource, such as distinguishing text in XML from plain text.
-    /// The value must be a string, and it should be the value of the Content-Type header returned when this resource is dereferenced.
-    format: Option<String>,
-
-    /// 该资源提供的模式或命名功能集。配置文件可以进一步明确外部资源的`type`和/或`format` 。该值必须是字符串，可以从[配置文件注册表](https://iiif.io/api/registry/)
-    /// 中提取，也可以是 URI。
-    ///
-    /// A schema or named set of functionality available from this resource. The profile can further clarify the `type` and/or `format` of
-    /// an external resource. The value must be a string, either taken from the Registry of Profiles or a URI.
-    profile: Option<String>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_context() {
-        let context = Context::default();
-        assert_eq!(
-            context,
-            Context::Single("http://iiif.io/api/image/3/context.json".to_string())
-        );
-
-        let context1 = Context::new_single();
-        assert_eq!(context, context1);
-
-        let context = Context::new_list(&["http://iiif.io/api/image/2/context.json".to_string()]);
-        assert_eq!(
-            context,
-            Context::List(vec![
-                "http://iiif.io/api/image/2/context.json".to_string(),
-                "http://iiif.io/api/image/3/context.json".to_string()
-            ])
-        );
-    }
-
-    #[test]
-    fn test_info_type() {
-        let info_type = InfoType::default();
-        assert_eq!(info_type, InfoType("ImageService3".to_string()));
-    }
-
-    #[test]
-    fn test_protocol() {
-        let protocol = Protocol::default();
-        assert_eq!(protocol, Protocol("http://iiif.io/api/image".to_string()));
-    }
 
     #[test]
     fn test_profile() {
