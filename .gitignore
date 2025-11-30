@@ -2,3 +2,4 @@
 /output
 /examples
 tarpaulin-report.html
+Cargo.lock
