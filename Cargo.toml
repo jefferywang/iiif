@@ -3,6 +3,12 @@ name = "i3f"
 license = "MIT"
 version = "0.1.0"
 edition = "2024"
+authors = ["JefferyWang <admin@wangjunfeng.com>"]
+description = "A library for IIIF API, including Image, Presentation."
+repository = "https://github.com/jefferywang/iiif"
+documentation = "https://docs.rs/i3f"
+keywords = ["iiif", "image"]
+categories = ["image"]
 
 [dependencies]
 image = { version = "0.25", default-features = false, features = [
