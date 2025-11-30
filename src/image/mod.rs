@@ -226,6 +226,13 @@ mod tests {
         .unwrap();
         let iiif_image1 = IiifImage::try_from(url_data1).unwrap();
         assert_eq!(iiif_image1.identifier, "data/aaa.jpg");
+
+        let url_data2 = Url::parse(
+            "https://example.org/image-service/data%2Faaa.jpg/full1/max/0/default.jpg?a=1",
+        )
+        .unwrap();
+        let result = IiifImage::try_from(url_data2);
+        assert!(result.is_err());
     }
 
     #[test]
@@ -320,7 +327,10 @@ mod tests {
     #[test]
     fn test_process() {
         let storage = LocalStorage::new("./fixtures", "./fixtures/out");
-        let cases = vec![("/square/150,/15/color.png", "image/png", 184, 184)];
+        let cases = vec![
+            ("/square/150,/15/color.png", "image/png", 184, 184),
+            ("/full/max/0/default.jpg", "image/jpeg", 300, 200),
+        ];
         for case in cases {
             let url_str = format!("https://example.org/image-service/demo.jpg{}", case.0);
             let url_data = Url::parse(&url_str).unwrap();
@@ -332,6 +342,19 @@ mod tests {
             let image = image::load_from_memory(&result.data).unwrap();
             assert_eq!(image.width(), case.2);
             assert_eq!(image.height(), case.3);
+
+            // remove the out directory
+            if case.0.contains("square") {
+                std::fs::remove_dir_all("./fixtures/out/demo.jpg/square/").unwrap();
+            }
         }
+    }
+
+    #[test]
+    fn test_iiif_image() {
+        let url = Url::parse("https://example.org/image-service/demo.jpg/full/max/0/default.jpg")
+            .unwrap();
+        let image = IiifImage::try_from(url).unwrap();
+        assert_eq!(image.to_string(), "demo.jpg/full/max/0/default.jpg");
     }
 }

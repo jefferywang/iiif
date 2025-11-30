@@ -4,3 +4,4 @@
 tarpaulin-report.html
 Cargo.lock
 .env
+fixtures/out/square/

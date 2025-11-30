@@ -347,6 +347,11 @@ mod tests {
             Size::from_str("^!360,360").unwrap(),
             Size::CLWH { w: 360, h: 360 }
         );
+
+        assert!(Size::from_str("pct:150").is_err());
+        assert!(Size::from_str("aaaaaaa").is_err());
+        assert!(Size::from_str("pct:-10").is_err());
+        assert!(Size::from_str("100,100,100,100,100").is_err());
     }
 
     #[test]
@@ -355,6 +360,7 @@ mod tests {
         assert_eq!(format!("{}", Size::Pct { n: 50.0 }), "pct:50");
         assert_eq!(format!("{}", Size::WH { w: 100, h: 200 }), "100,200");
         assert_eq!(format!("{}", Size::LWH { w: 100, h: 200 }), "!100,200");
+        assert_eq!(format!("{}", Size::CH { h: 150 }), "^,150");
     }
 
     #[test]
@@ -409,7 +415,7 @@ mod tests {
     #[test]
     fn test_size_process_error() {
         let storage = LocalStorage::new("./fixtures", "./fixtures/out");
-        let cases = vec!["500,", ",500", "500,200", "200,500"];
+        let cases = vec!["500,", ",500", "500,200", "200,500", "!500,500"];
         for case in cases {
             let size = case.parse::<Size>().unwrap();
             let image = storage.get_origin_file("demo.jpg").unwrap();

@@ -235,6 +235,13 @@ mod tests {
             Region::Pct(41.6, 7.5, 40.0, 70.0)
         );
         assert!(Region::from_str("invalid").is_err());
+        assert!(Region::from_str("125,15,120,140,150").is_err());
+        assert!(Region::from_str("125,15,120").is_err());
+        assert!(Region::from_str("125,15,120,140.11").is_err());
+
+        assert!(Region::from_str("pct:10,20,30,40,50").is_err());
+        assert!(Region::from_str("pct:10,20,30").is_err());
+        assert!(Region::from_str("pct:10,20,30,aa").is_err());
     }
 
     #[test]
@@ -281,6 +288,33 @@ mod tests {
         let region6 = Region::Pct(41.6, 7.5, 66.6, 100.0);
         let (x, y, w, h) = region6.get_region(width, height).unwrap();
         assert_eq!((x, y, w, h), (125, 15, 175, 185));
+    }
+
+    #[test]
+    fn test_region_get_region_error() {
+        let width = 300;
+        let height = 200;
+        let region = Region::Rect(125, 15, 0, 140);
+        let result = region.get_region(width, height);
+        assert!(result.is_err());
+        let region = Region::Rect(125, 15, 120, 0);
+        let result = region.get_region(width, height);
+        assert!(result.is_err());
+        let region = Region::Rect(300, 15, 200, 200);
+        let result = region.get_region(width, height);
+        assert!(result.is_err());
+        let region = Region::Rect(125, 200, 200, 200);
+        let result = region.get_region(width, height);
+        assert!(result.is_err());
+        let region = Region::Pct(41.6, 7.5, 66.6, 0.0);
+        let result = region.get_region(width, height);
+        assert!(result.is_err());
+        let region = Region::Pct(41.6, 7.5, 0.0, 100.0);
+        let result = region.get_region(width, height);
+        assert!(result.is_err());
+        let region = Region::Pct(41.6, 107.5, 66.6, 100.0);
+        let result = region.get_region(width, height);
+        assert!(result.is_err());
     }
 
     #[test]

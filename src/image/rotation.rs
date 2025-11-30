@@ -200,4 +200,19 @@ mod tests {
             assert_eq!(rotated_image.height(), case.2);
         }
     }
+
+    #[test]
+    fn test_rotation_process_error() {
+        let storage = LocalStorage::new("./fixtures", "./fixtures/out");
+        let rotation = Rotation::Degrees(361.0);
+        let image = storage.get_origin_file("demo.jpg").unwrap();
+        let image = image::load_from_memory(&image).unwrap();
+        let result = rotation.process(image);
+        assert!(result.is_err());
+        let rotation = Rotation::MirrorDegrees(361.0);
+        let image = storage.get_origin_file("demo.jpg").unwrap();
+        let image = image::load_from_memory(&image).unwrap();
+        let result = rotation.process(image);
+        assert!(result.is_err());
+    }
 }

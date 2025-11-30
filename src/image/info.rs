@@ -398,4 +398,12 @@ mod tests {
         let profile = Profile::default();
         assert_eq!(profile, Profile::Level0);
     }
+
+    #[test]
+    fn test_image_info() {
+        let info = ImageInfo::default();
+        assert_eq!(info.r#type, "ImageService3");
+        assert_eq!(info.protocol, "http://iiif.io/api/image");
+        assert_eq!(info.profile, Profile::Level0);
+    }
 }

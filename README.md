@@ -3,7 +3,7 @@
 ![GitHub License](https://img.shields.io/github/license/jefferywang/iiif?style=for-the-badge)
 [![Codecov](https://img.shields.io/codecov/c/github/jefferywang/iiif?style=for-the-badge)](https://codecov.io/gh/jefferywang/iiif)
 [![docs.rs](https://img.shields.io/docsrs/i3f?style=for-the-badge)](https://docs.rs/i3f/latest/i3f/)
-[![Crates.io Version](https://img.shields.io/crates/v/i3f?style=for-the-badge)](https://crates.io/crates/i3f)
+[![Crates.io](https://img.shields.io/crates/v/i3f?style=for-the-badge)](https://crates.io/crates/i3f)
 ![Crates.io Size](https://img.shields.io/crates/size/i3f?style=for-the-badge)
 ![Crates.io Total Downloads](https://img.shields.io/crates/d/i3f?style=for-the-badge)
 ![Deps.rs Crate Dependencies (latest)](https://img.shields.io/deps-rs/i3f/latest?style=for-the-badge)
@@ -55,7 +55,7 @@
 
 ```toml
 [dependencies]
-i3f = "0.1.0"
+i3f = "*"
 ```
 
 ### 快速开始
@@ -205,7 +205,7 @@ Add the dependency to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-i3f = "0.1.0"
+i3f = "*"
 ```
 
 ### Quick Start
