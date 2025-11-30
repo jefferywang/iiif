@@ -1,5 +1,13 @@
 # i3f
 
+![GitHub License](https://img.shields.io/github/license/jefferywang/iiif?style=for-the-badge)
+[![Codecov](https://img.shields.io/codecov/c/github/jefferywang/iiif?style=for-the-badge)](https://codecov.io/gh/jefferywang/iiif)
+[![docs.rs](https://img.shields.io/docsrs/i3f?style=for-the-badge)](https://docs.rs/i3f/latest/i3f/)
+[![Crates.io Version](https://img.shields.io/crates/v/i3f?style=for-the-badge)](https://crates.io/crates/i3f)
+![Crates.io Size](https://img.shields.io/crates/size/i3f?style=for-the-badge)
+![Crates.io Total Downloads](https://img.shields.io/crates/d/i3f?style=for-the-badge)
+![Deps.rs Crate Dependencies (latest)](https://img.shields.io/deps-rs/i3f/latest?style=for-the-badge)
+
 [English](#english) | [中文](#中文)
 
 ---
@@ -13,6 +21,7 @@
 ### 功能特性
 
 - ✅ **IIIF Image API 3.0** 完整支持
+
   - 图像区域裁剪（Region）：支持 `full`、`square`、像素坐标和百分比坐标
   - 图像尺寸调整（Size）：支持多种尺寸参数格式
   - 图像旋转（Rotation）：支持 90 度倍数旋转和任意角度旋转
@@ -21,6 +30,7 @@
   - 图像信息（Info）：完整的 `info.json` 结构支持
 
 - ✅ **IIIF Presentation API 3.0** 完整支持
+
   - Collection（集合）
   - Manifest（清单）
   - Canvas（画布）
@@ -29,6 +39,7 @@
   - AnnotationPage（注解页）
 
 - ✅ **图像处理能力**
+
   - 支持任意角度旋转（使用 `imageproc` 库）
   - 90 度倍数旋转优化（使用 `image` 库内置方法）
   - 透明背景填充
@@ -109,6 +120,7 @@ println!("{}", json);
 ### 模块说明
 
 - **`image`**: IIIF Image API 3.0 实现
+
   - `IiifImage`: 图像请求解析和处理
   - `Region`: 区域裁剪
   - `Size`: 尺寸调整
@@ -118,6 +130,7 @@ println!("{}", json);
   - `ImageInfo`: 图像信息结构
 
 - **`presentation`**: IIIF Presentation API 3.0 实现
+
   - `Collection`: 集合结构
   - `Manifest`: 清单结构
   - `Canvas`: 画布结构
@@ -126,6 +139,7 @@ println!("{}", json);
   - `AnnotationPage`: 注解页结构
 
 - **`storage`**: 存储抽象
+
   - `Storage`: 存储接口
   - `LocalStorage`: 本地文件系统存储实现
 
@@ -157,6 +171,7 @@ MIT License
 ### Features
 
 - ✅ **Full IIIF Image API 3.0 Support**
+
   - Image Region: Supports `full`, `square`, pixel coordinates, and percentage coordinates
   - Image Size: Supports multiple size parameter formats
   - Image Rotation: Supports 90-degree multiples and arbitrary angle rotation
@@ -165,6 +180,7 @@ MIT License
   - Image Info: Complete `info.json` structure support
 
 - ✅ **Full IIIF Presentation API 3.0 Support**
+
   - Collection
   - Manifest
   - Canvas
@@ -173,6 +189,7 @@ MIT License
   - AnnotationPage
 
 - ✅ **Image Processing Capabilities**
+
   - Arbitrary angle rotation (using `imageproc` library)
   - Optimized 90-degree multiple rotation (using `image` library built-in methods)
   - Transparent background filling
@@ -253,6 +270,7 @@ println!("{}", json);
 ### Modules
 
 - **`image`**: IIIF Image API 3.0 implementation
+
   - `IiifImage`: Image request parsing and processing
   - `Region`: Region cropping
   - `Size`: Size adjustment
@@ -262,6 +280,7 @@ println!("{}", json);
   - `ImageInfo`: Image information structure
 
 - **`presentation`**: IIIF Presentation API 3.0 implementation
+
   - `Collection`: Collection structure
   - `Manifest`: Manifest structure
   - `Canvas`: Canvas structure
@@ -270,6 +289,7 @@ println!("{}", json);
   - `AnnotationPage`: Annotation page structure
 
 - **`storage`**: Storage abstraction
+
   - `Storage`: Storage interface
   - `LocalStorage`: Local file system storage implementation
 

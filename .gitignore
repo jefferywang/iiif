@@ -3,3 +3,4 @@
 /examples
 tarpaulin-report.html
 Cargo.lock
+.env
